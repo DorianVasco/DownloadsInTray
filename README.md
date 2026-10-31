@@ -16,6 +16,7 @@ This publishes to `%LOCALAPPDATA%\Programs\WinDownload` and adds a Start menu sh
 
 - **Click the icon** to open or close the popup. Clicking elsewhere or pressing Esc also closes it.
 - **Click a row** to open the item, or right-click it for **Show in folder**. Arrow keys and Enter work too.
+- **Drag a row** into a folder or app. Explorer moves it within a drive and copies it across drives.
 - **Tray icon:** it shows the app is running. Left-click toggles the popup and right-click opens the options. Windows may hide it under the tray's ^ arrow until you drag it out.
 - **⋯ menu:** **Start at login** makes the first click after a reboot instant. **Quit WinDownload** stops the background process.
 

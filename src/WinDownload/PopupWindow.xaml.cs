@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,18 +19,22 @@ public partial class PopupWindow : Window
     private const int ScreenGapDip = 12;
 
     // Clicking the pinned icon hides the popup through deactivation (mouse down), then launches
-    // a process (mouse up) whose request must not reopen it. Only that click's request is ignored:
-    // the window runs from mouse release, so a later click on the icon always opens the popup.
-    private const int ToggleWindowMs = 350;
+    // a process (mouse up) whose request must not reopen it. The launch can take over a second, so
+    // a click on the app's own icon waits that long. Any other click only needs to cover a race,
+    // so that the next click on the icon always opens the popup.
+    private const int OwnIconToggleWindowMs = 3000;
+    private const int OtherToggleWindowMs = 150;
 
     private readonly ShellIconLoader _icons;
     private readonly DispatcherTimer _refreshDebounce;
     private readonly DispatcherTimer _mouseReleaseWatch;
     private FileSystemWatcher? _watcher;
     private IntPtr _hwnd;
-    private long _ignoreLaunchUntil;
+    private Task<bool>? _closingClickProbe;
+    private long _closingClickReleasedAt;
     private bool _hidingSilently;
     private bool _quitting;
+    private Point? _dragStart;
     private Native.POINT _anchor;
 
     public PopupWindow()
@@ -65,11 +70,11 @@ public partial class PopupWindow : Window
         int backdrop = Native.DWMSBT_TRANSIENTWINDOW;
         Native.DwmSetWindowAttribute(_hwnd, Native.DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
 
+        TaskbarProbe.WarmUp();
         StartWatching();
         ShowItems(DownloadsFolder.ReadRecent());
     }
-
-    public void HandleLaunchRequest()
+    public async void HandleLaunchRequest()
     {
         if (IsVisible)
         {
@@ -77,9 +82,15 @@ public partial class PopupWindow : Window
             return;
         }
 
-        bool closedByThisClick = Environment.TickCount64 < _ignoreLaunchUntil;
-        ClearToggleWindow();
-        if (closedByThisClick) return;
+        Task<bool>? closingClickProbe = _closingClickProbe;
+        ClearClosingClick();
+        if (closingClickProbe != null)
+        {
+            long requestedAt = Environment.TickCount64;
+            long releasedAt = _closingClickReleasedAt;
+            int window = await closingClickProbe ? OwnIconToggleWindowMs : OtherToggleWindowMs;
+            if (requestedAt - releasedAt < window) return;
+        }
 
         ShowPopup();
     }
@@ -87,15 +98,15 @@ public partial class PopupWindow : Window
     /// <summary>Opens the popup with its options menu, for a right-click on the tray icon.</summary>
     public void ShowOptionsMenu()
     {
-        ClearToggleWindow();
+        ClearClosingClick();
         if (!IsVisible) ShowPopup();
         Dispatcher.BeginInvoke(DispatcherPriority.Input, () => OnMenuClick(MenuButton, new RoutedEventArgs()));
     }
 
-    private void ClearToggleWindow()
+    private void ClearClosingClick()
     {
         _mouseReleaseWatch.Stop();
-        _ignoreLaunchUntil = 0;
+        _closingClickProbe = null;
     }
 
     private void ShowPopup()
@@ -251,23 +262,27 @@ public partial class PopupWindow : Window
     {
         if (_hidingSilently) return;
 
+        Hide();
+
+        Native.GetCursorPos(out Native.POINT cursor);
+        _closingClickProbe = TaskbarProbe.IsOwnIconAsync(cursor);
+
         if (IsPrimaryButtonDown())
         {
-            _ignoreLaunchUntil = long.MaxValue;
+            _closingClickReleasedAt = long.MaxValue;
             _mouseReleaseWatch.Start();
         }
         else
         {
-            _ignoreLaunchUntil = Environment.TickCount64 + ToggleWindowMs;
+            _closingClickReleasedAt = Environment.TickCount64;
         }
-        Hide();
     }
 
     private void OnMouseReleaseTick()
     {
         if (IsPrimaryButtonDown()) return;
         _mouseReleaseWatch.Stop();
-        _ignoreLaunchUntil = Environment.TickCount64 + ToggleWindowMs;
+        _closingClickReleasedAt = Environment.TickCount64;
     }
 
     private static bool IsPrimaryButtonDown()
@@ -291,6 +306,57 @@ public partial class PopupWindow : Window
             HideSilently();
             Launch(new ProcessStartInfo(item.Path) { UseShellExecute = true, ErrorDialog = true });
         }
+    }
+
+    private void OnRowMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _dragStart = e.GetPosition(this);
+    }
+
+    private void OnRowMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_dragStart is not Point start || e.LeftButton != MouseButtonState.Pressed)
+        {
+            _dragStart = null;
+            return;
+        }
+
+        Vector moved = e.GetPosition(this) - start;
+        if (Math.Abs(moved.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(moved.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        _dragStart = null;
+        if (sender is Button { DataContext: DownloadItem item } row) DragToOtherApp(row, item);
+    }
+
+    // The target performs the transfer: Explorer moves within a drive and copies across drives.
+    private void DragToOtherApp(Button row, DownloadItem item)
+    {
+        var data = new DataObject(DataFormats.FileDrop, new[] { item.Path });
+
+        // Get out of the way once the drag leaves the popup, so targets behind it can be reached.
+        QueryContinueDragEventHandler hideOutside = (_, _) =>
+        {
+            if (IsVisible && !IsCursorOverPopup()) HideSilently();
+        };
+        DragDrop.AddQueryContinueDragHandler(row, hideOutside);
+
+        row.ReleaseMouseCapture();
+        DragDropEffects result = DragDrop.DoDragDrop(row, data, DragDropEffects.Copy | DragDropEffects.Move | DragDropEffects.Link);
+
+        DragDrop.RemoveQueryContinueDragHandler(row, hideOutside);
+        if (IsVisible && result != DragDropEffects.None) HideSilently();
+    }
+
+    private bool IsCursorOverPopup()
+    {
+        Native.GetCursorPos(out Native.POINT cursor);
+        return Native.GetWindowRect(_hwnd, out Native.RECT rect)
+            && cursor.X >= rect.Left && cursor.X < rect.Right
+            && cursor.Y >= rect.Top && cursor.Y < rect.Bottom;
     }
 
     private void OnShowInFolderClick(object sender, RoutedEventArgs e)

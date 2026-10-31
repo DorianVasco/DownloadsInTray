@@ -93,6 +93,8 @@
                     <DataTemplate>
                         <Button Style="{StaticResource RowButton}"
                                 Click="OnItemClick"
+                                PreviewMouseLeftButtonDown="OnRowMouseDown"
+                                PreviewMouseMove="OnRowMouseMove"
                                 ToolTip="{Binding Name}"
                                 ToolTipService.ShowsToolTipOnKeyboardFocus="False">
                             <Button.ContextMenu>
