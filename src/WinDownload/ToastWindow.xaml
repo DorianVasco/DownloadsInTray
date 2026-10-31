@@ -13,6 +13,8 @@
         Cursor="Hand"
         MouseEnter="OnMouseEnter"
         MouseLeave="OnMouseLeave"
+        MouseLeftButtonDown="OnMouseLeftButtonDown"
+        MouseMove="OnMouseMove"
         MouseLeftButtonUp="OnMouseLeftButtonUp"
         UseLayoutRounding="True">
 

@@ -27,6 +27,8 @@ public partial class ToastWindow : Window
     private int _slidePixels;
     private bool _fadingOut;
     private long _animationStart;
+    private string[] _paths = Array.Empty<string>();
+    private Point? _pressedAt;
 
     public ToastWindow()
     {
@@ -59,6 +61,7 @@ public partial class ToastWindow : Window
         Headline.Text = single ? latestName : $"{addedPaths.Count} new downloads";
         Detail.Text = single ? "New in Downloads" : latestName;
         DataContext = latest;
+        _paths = addedPaths.ToArray();
 
         bool alreadyShown = IsVisible && !_fadingOut;
         if (!alreadyShown) ShowAnimated();
@@ -149,10 +152,40 @@ public partial class ToastWindow : Window
         }
     }
 
-    private void OnMouseLeave(object sender, MouseEventArgs e) => _dismissTimer.Start();
+    private void OnMouseLeave(object sender, MouseEventArgs e)
+    {
+        if (_pressedAt == null) _dismissTimer.Start();
+    }
+
+    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _pressedAt = e.GetPosition(this);
+        CaptureMouse();
+    }
+
+    private void OnMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_pressedAt is not Point start) return;
+
+        Vector moved = e.GetPosition(this) - start;
+        if (Math.Abs(moved.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(moved.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        _pressedAt = null;
+        _dismissTimer.Stop();
+        FileDrag.Run(this, _paths, _hwnd, Dismiss);
+        if (IsVisible) RestartDismissTimer();
+    }
 
     private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        ReleaseMouseCapture();
+        if (_pressedAt == null) return;
+
+        _pressedAt = null;
         Dismiss();
         Clicked?.Invoke();
     }

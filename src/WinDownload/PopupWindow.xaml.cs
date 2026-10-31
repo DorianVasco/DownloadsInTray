@@ -342,31 +342,10 @@ public partial class PopupWindow : Window
         if (sender is Button { DataContext: DownloadItem item } row) DragToOtherApp(row, item);
     }
 
-    // The target performs the transfer: Explorer moves within a drive and copies across drives.
     private void DragToOtherApp(Button row, DownloadItem item)
     {
-        var data = new DataObject(DataFormats.FileDrop, new[] { item.Path });
-
-        // Get out of the way once the drag leaves the popup, so targets behind it can be reached.
-        QueryContinueDragEventHandler hideOutside = (_, _) =>
-        {
-            if (IsVisible && !IsCursorOverPopup()) HideSilently();
-        };
-        DragDrop.AddQueryContinueDragHandler(row, hideOutside);
-
-        row.ReleaseMouseCapture();
-        DragDropEffects result = DragDrop.DoDragDrop(row, data, DragDropEffects.Copy | DragDropEffects.Move | DragDropEffects.Link);
-
-        DragDrop.RemoveQueryContinueDragHandler(row, hideOutside);
+        DragDropEffects result = FileDrag.Run(row, new[] { item.Path }, _hwnd, HideSilently);
         if (IsVisible && result != DragDropEffects.None) HideSilently();
-    }
-
-    private bool IsCursorOverPopup()
-    {
-        Native.GetCursorPos(out Native.POINT cursor);
-        return Native.GetWindowRect(_hwnd, out Native.RECT rect)
-            && cursor.X >= rect.Left && cursor.X < rect.Right
-            && cursor.Y >= rect.Top && cursor.Y < rect.Bottom;
     }
 
     private void OnShowInFolderClick(object sender, RoutedEventArgs e)
