@@ -17,7 +17,6 @@ public partial class ToastWindow : Window
     private const int SlideDip = 10;
     private const double FadeInMs = 180;
     private const double FadeOutMs = 220;
-    private static readonly TimeSpan VisibleTime = TimeSpan.FromSeconds(5);
 
     private readonly DispatcherTimer _animation;
     private readonly DispatcherTimer _dismissTimer;
@@ -35,7 +34,7 @@ public partial class ToastWindow : Window
         InitializeComponent();
         _animation = new DispatcherTimer(TimeSpan.FromMilliseconds(15), DispatcherPriority.Render, (_, _) => OnAnimationTick(), Dispatcher);
         _animation.Stop();
-        _dismissTimer = new DispatcherTimer(VisibleTime, DispatcherPriority.Normal, (_, _) => FadeOut(), Dispatcher);
+        _dismissTimer = new DispatcherTimer(TimeSpan.FromSeconds(AppSettings.Current.NotificationSeconds), DispatcherPriority.Normal, (_, _) => FadeOut(), Dispatcher);
         _dismissTimer.Stop();
     }
 
@@ -99,6 +98,7 @@ public partial class ToastWindow : Window
     private void RestartDismissTimer()
     {
         _dismissTimer.Stop();
+        _dismissTimer.Interval = TimeSpan.FromSeconds(AppSettings.Current.NotificationSeconds);
         if (!IsMouseOver) _dismissTimer.Start();
     }
 

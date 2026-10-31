@@ -28,6 +28,7 @@ public partial class PopupWindow : Window
     private readonly ShellIconLoader _icons;
     private readonly ToastWindow _toast = new();
     private readonly NewDownloadTracker _newDownloads = new();
+    private SettingsWindow? _settings;
     private readonly DispatcherTimer _refreshDebounce;
     private readonly DispatcherTimer _mouseReleaseWatch;
     private FileSystemWatcher? _watcher;
@@ -377,15 +378,21 @@ public partial class PopupWindow : Window
 
     private void OnMenuClick(object sender, RoutedEventArgs e)
     {
-        StartAtLoginItem.IsChecked = StartupRegistration.IsEnabled;
         ContextMenu menu = MenuButton.ContextMenu;
         menu.PlacementTarget = MenuButton;
         menu.IsOpen = true;
     }
 
-    private void OnStartAtLoginClick(object sender, RoutedEventArgs e)
+    private void OnSettingsClick(object sender, RoutedEventArgs e)
     {
-        StartupRegistration.IsEnabled = StartAtLoginItem.IsChecked;
+        HideSilently();
+        if (_settings == null)
+        {
+            _settings = new SettingsWindow();
+            _settings.Closed += (_, _) => _settings = null;
+        }
+        _settings.Show();
+        _settings.Activate();
     }
 
     // A closed WPF window can't be shown again, so Alt+F4 and similar only hide the popup.

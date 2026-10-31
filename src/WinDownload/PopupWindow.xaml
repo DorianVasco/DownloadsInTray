@@ -146,10 +146,7 @@
                 <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE712;" />
                 <Button.ContextMenu>
                     <ContextMenu>
-                        <MenuItem x:Name="StartAtLoginItem"
-                                  Header="Start at login"
-                                  IsCheckable="True"
-                                  Click="OnStartAtLoginClick" />
+                        <MenuItem Header="Settings" Click="OnSettingsClick" />
                         <Separator />
                         <MenuItem Header="Quit WinDownload" Click="OnQuitClick" />
                     </ContextMenu>
