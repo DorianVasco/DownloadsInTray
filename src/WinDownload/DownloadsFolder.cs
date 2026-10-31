@@ -24,9 +24,7 @@ internal static class DownloadsFolder
     {
         try
         {
-            return new DirectoryInfo(Path)
-                .EnumerateFileSystemInfos()
-                .Where(IsListed)
+            return EnumerateListed()
                 .OrderByDescending(info => info.CreationTime)
                 .Take(MaxItems)
                 .Select(ToItem)
@@ -37,6 +35,9 @@ internal static class DownloadsFolder
             return Array.Empty<DownloadItem>();
         }
     }
+
+    public static IEnumerable<FileSystemInfo> EnumerateListed() =>
+        new DirectoryInfo(Path).EnumerateFileSystemInfos().Where(IsListed);
 
     public static bool IsInProgress(string? name) =>
         InProgressExtensions.Contains(System.IO.Path.GetExtension(name) ?? string.Empty);

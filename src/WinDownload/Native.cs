@@ -10,7 +10,13 @@ internal static class Native
     public const int GWL_EXSTYLE = -20;
     public const int WS_EX_TOOLWINDOW = 0x00000080;
     public const int WS_EX_APPWINDOW = 0x00040000;
+    public const int WS_EX_LAYERED = 0x00080000;
+    public const int WS_EX_NOACTIVATE = 0x08000000;
 
+    public const uint LWA_ALPHA = 0x00000002;
+    public const int QUNS_ACCEPTS_NOTIFICATIONS = 5;
+
+    public const uint SWP_NOSIZE = 0x0001;
     public const uint SWP_NOZORDER = 0x0004;
     public const uint SWP_NOACTIVATE = 0x0010;
 
@@ -90,6 +96,12 @@ internal static class Native
     public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
     [DllImport("user32.dll")]
+    public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+    [DllImport("shell32.dll")]
+    public static extern int SHQueryUserNotificationState(out int pquns);
+
+    [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll")]
@@ -152,4 +164,21 @@ internal static class Native
     }
 
     public static readonly Guid FOLDERID_Downloads = new("374DE290-123F-4565-9164-39C4925E467B");
+
+    /// <summary>False during full-screen apps, presentations and quiet time.</summary>
+    public static bool CanInterrupt() =>
+        SHQueryUserNotificationState(out int state) != 0 || state == QUNS_ACCEPTS_NOTIFICATIONS;
+
+    /// <summary>Gives a window the shared look: no taskbar or Alt+Tab entry, rounded corners, acrylic backdrop.</summary>
+    public static void ApplyFlyoutStyle(IntPtr hwnd, int extraExStyle = 0)
+    {
+        long exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
+        exStyle = (exStyle | WS_EX_TOOLWINDOW | (uint)extraExStyle) & ~(long)WS_EX_APPWINDOW;
+        SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(exStyle));
+
+        int corner = DWMWCP_ROUND;
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
+        int backdrop = DWMSBT_TRANSIENTWINDOW;
+        DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
+    }
 }

@@ -26,6 +26,8 @@ public partial class PopupWindow : Window
     private const int OtherToggleWindowMs = 150;
 
     private readonly ShellIconLoader _icons;
+    private readonly ToastWindow _toast = new();
+    private readonly NewDownloadTracker _newDownloads = new();
     private readonly DispatcherTimer _refreshDebounce;
     private readonly DispatcherTimer _mouseReleaseWatch;
     private FileSystemWatcher? _watcher;
@@ -61,14 +63,9 @@ public partial class PopupWindow : Window
     {
         _hwnd = new WindowInteropHelper(this).EnsureHandle();
 
-        long exStyle = Native.GetWindowLongPtr(_hwnd, Native.GWL_EXSTYLE).ToInt64();
-        exStyle = (exStyle | Native.WS_EX_TOOLWINDOW) & ~(long)Native.WS_EX_APPWINDOW;
-        Native.SetWindowLongPtr(_hwnd, Native.GWL_EXSTYLE, new IntPtr(exStyle));
-
-        int corner = Native.DWMWCP_ROUND;
-        Native.DwmSetWindowAttribute(_hwnd, Native.DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
-        int backdrop = Native.DWMSBT_TRANSIENTWINDOW;
-        Native.DwmSetWindowAttribute(_hwnd, Native.DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
+        Native.ApplyFlyoutStyle(_hwnd);
+        _toast.Prepare();
+        _toast.Clicked += ShowFromToast;
 
         TaskbarProbe.WarmUp();
         StartWatching();
@@ -103,6 +100,12 @@ public partial class PopupWindow : Window
         Dispatcher.BeginInvoke(DispatcherPriority.Input, () => OnMenuClick(MenuButton, new RoutedEventArgs()));
     }
 
+    private void ShowFromToast()
+    {
+        ClearClosingClick();
+        if (!IsVisible) ShowPopup();
+    }
+
     private void ClearClosingClick()
     {
         _mouseReleaseWatch.Stop();
@@ -111,6 +114,7 @@ public partial class PopupWindow : Window
 
     private void ShowPopup()
     {
+        _toast.Dismiss();
         Native.GetCursorPos(out _anchor);
         ShowItems(DownloadsFolder.ReadRecent());
         Scroller.ScrollToTop();
@@ -140,6 +144,7 @@ public partial class PopupWindow : Window
             _watcher.Changed += changed;
             _watcher.Renamed += (_, e) =>
             {
+                Dispatcher.BeginInvoke(() => _newDownloads.OnRenamed(e.OldFullPath, e.FullPath));
                 if (!DownloadsFolder.IsInProgress(e.Name) || !DownloadsFolder.IsInProgress(e.OldName)) ScheduleRefresh();
             };
         }
@@ -162,14 +167,19 @@ public partial class PopupWindow : Window
 
         // Rebuilding the rows drops keyboard focus and open menus, so only do it for a real change.
         var items = DownloadsFolder.ReadRecent();
-        if (Items.ItemsSource is IEnumerable<DownloadItem> current && current.SequenceEqual(items, SameListing.Instance)) return;
-
-        ShowItems(items);
-        if (IsVisible)
+        if (Items.ItemsSource is not IEnumerable<DownloadItem> current || !current.SequenceEqual(items, SameListing.Instance))
         {
-            PositionNearAnchor();
-            FocusFirstItem();
+            ShowItems(items);
+            if (IsVisible)
+            {
+                PositionNearAnchor();
+                FocusFirstItem();
+            }
         }
+
+        // The open popup already shows new items as they arrive.
+        IReadOnlyList<string> added = _newDownloads.TakeNew();
+        if (added.Count > 0 && !IsVisible) _toast.Announce(added, items);
     }
 
     private void ShowItems(IReadOnlyList<DownloadItem> items)
