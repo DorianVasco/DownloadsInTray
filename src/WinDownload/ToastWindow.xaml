@@ -26,6 +26,15 @@
                       UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
 
+    <Window.ContextMenu>
+        <ContextMenu Opened="OnMenuOpened" Closed="OnMenuClosed">
+            <MenuItem x:Name="OpenItem" Header="Open" FontWeight="SemiBold" Click="OnOpenClick" />
+            <MenuItem Header="Show in folder" Click="OnShowInFolderClick" />
+            <Separator />
+            <MenuItem Header="Show all downloads" Click="OnShowListClick" />
+        </ContextMenu>
+    </Window.ContextMenu>
+
     <Grid x:Name="Root" Margin="14,12">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />

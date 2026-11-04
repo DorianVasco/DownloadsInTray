@@ -17,7 +17,7 @@ This publishes to `%LOCALAPPDATA%\Programs\WinDownload` and adds a Start menu sh
 - **Click the icon** to open or close the popup. Clicking elsewhere or pressing Esc also closes it.
 - **Click a row** to open the item, or right-click it for **Show in folder**. Arrow keys and Enter work too.
 - **Drag a row** into a folder or app. Explorer moves it within a drive and copies it across drives.
-- **Notification:** a small notice fades in above the tray when something new lands in Downloads, and clicking it opens the list. Drag it into a folder or app to move all the files it announces. It stays quiet while the popup is open and when Windows reports that you shouldn't be interrupted, such as during full-screen apps.
+- **Notification:** a small notice fades in above the tray when something new lands in Downloads, and clicking it opens the file (or the list, when several arrived together). Right-click it for **Open**, **Show in folder** and **Show all downloads**. Drag it into a folder or app to move all the files it announces. It stays quiet while the popup is open and when Windows reports that you shouldn't be interrupted, such as during full-screen apps.
 - **Tray icon:** it shows the app is running. Left-click toggles the popup and right-click opens the options. Windows may hide it under the tray's ^ arrow until you drag it out.
 - **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, and how long notifications stay up (2 to 30 seconds). **Quit WinDownload** stops the background process.
 

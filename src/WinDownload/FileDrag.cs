@@ -13,7 +13,7 @@ internal static class FileDrag
 
         QueryContinueDragEventHandler hideOutside = (_, _) =>
         {
-            if (source.IsVisible && !IsCursorOver(hwnd)) onLeftWindow();
+            if (source.IsVisible && !Native.IsCursorOver(hwnd)) onLeftWindow();
         };
         DragDrop.AddQueryContinueDragHandler(source, hideOutside);
 
@@ -22,13 +22,5 @@ internal static class FileDrag
 
         DragDrop.RemoveQueryContinueDragHandler(source, hideOutside);
         return result;
-    }
-
-    private static bool IsCursorOver(IntPtr hwnd)
-    {
-        Native.GetCursorPos(out Native.POINT cursor);
-        return Native.GetWindowRect(hwnd, out Native.RECT rect)
-            && cursor.X >= rect.Left && cursor.X < rect.Right
-            && cursor.Y >= rect.Top && cursor.Y < rect.Bottom;
     }
 }

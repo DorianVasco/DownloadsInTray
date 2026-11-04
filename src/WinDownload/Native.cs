@@ -165,6 +165,15 @@ internal static class Native
 
     public static readonly Guid FOLDERID_Downloads = new("374DE290-123F-4565-9164-39C4925E467B");
 
+    /// <summary>Asks the system rather than WPF, whose mouse-over state goes stale while a menu or drag holds the mouse.</summary>
+    public static bool IsCursorOver(IntPtr hwnd)
+    {
+        GetCursorPos(out POINT cursor);
+        return GetWindowRect(hwnd, out RECT rect)
+            && cursor.X >= rect.Left && cursor.X < rect.Right
+            && cursor.Y >= rect.Top && cursor.Y < rect.Bottom;
+    }
+
     /// <summary>False during full-screen apps, presentations and quiet time.</summary>
     public static bool CanInterrupt() =>
         SHQueryUserNotificationState(out int state) != 0 || state == QUNS_ACCEPTS_NOTIFICATIONS;

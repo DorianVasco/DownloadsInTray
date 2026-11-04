@@ -66,7 +66,7 @@ public partial class PopupWindow : Window
 
         Native.ApplyFlyoutStyle(_hwnd);
         _toast.Prepare();
-        _toast.Clicked += ShowFromToast;
+        _toast.ShowListRequested += ShowFromToast;
 
         TaskbarProbe.WarmUp();
         StartWatching();
@@ -315,7 +315,7 @@ public partial class PopupWindow : Window
         if (sender is FrameworkElement { DataContext: DownloadItem item })
         {
             HideSilently();
-            Launch(new ProcessStartInfo(item.Path) { UseShellExecute = true, ErrorDialog = true });
+            ShellActions.Open(item.Path);
         }
     }
 
@@ -354,26 +354,14 @@ public partial class PopupWindow : Window
         if (sender is FrameworkElement { DataContext: DownloadItem item })
         {
             HideSilently();
-            Launch(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Path}\"") { UseShellExecute = true });
+            ShellActions.ShowInFolder(item.Path);
         }
     }
 
     private void OnOpenFolderClick(object sender, RoutedEventArgs e)
     {
         HideSilently();
-        Launch(new ProcessStartInfo(DownloadsFolder.Path) { UseShellExecute = true, ErrorDialog = true });
-    }
-
-    private static void Launch(ProcessStartInfo startInfo)
-    {
-        try
-        {
-            Process.Start(startInfo)?.Dispose();
-        }
-        catch (Win32Exception)
-        {
-            // The shell has already reported the failure, or the user cancelled.
-        }
+        ShellActions.Open(DownloadsFolder.Path);
     }
 
     private void OnMenuClick(object sender, RoutedEventArgs e)

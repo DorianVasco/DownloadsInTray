@@ -28,6 +28,7 @@ public partial class ToastWindow : Window
     private long _animationStart;
     private string[] _paths = Array.Empty<string>();
     private Point? _pressedAt;
+    private string _latestPath = string.Empty;
 
     public ToastWindow()
     {
@@ -38,7 +39,7 @@ public partial class ToastWindow : Window
         _dismissTimer.Stop();
     }
 
-    public event Action? Clicked;
+    public event Action? ShowListRequested;
 
     public void Prepare()
     {
@@ -61,6 +62,8 @@ public partial class ToastWindow : Window
         Detail.Text = single ? "New in Downloads" : latestName;
         DataContext = latest;
         _paths = addedPaths.ToArray();
+        _latestPath = latest?.Path ?? addedPaths[0];
+        OpenItem.Header = single ? "Open" : $"Open {latestName}";
 
         bool alreadyShown = IsVisible && !_fadingOut;
         if (!alreadyShown) ShowAnimated();
@@ -99,7 +102,7 @@ public partial class ToastWindow : Window
     {
         _dismissTimer.Stop();
         _dismissTimer.Interval = TimeSpan.FromSeconds(AppSettings.Current.NotificationSeconds);
-        if (!IsMouseOver) _dismissTimer.Start();
+        if (!Native.IsCursorOver(_hwnd)) _dismissTimer.Start();
     }
 
     private void OnAnimationTick()
@@ -141,7 +144,14 @@ public partial class ToastWindow : Window
 
     private void SetAlpha(byte alpha) => Native.SetLayeredWindowAttributes(_hwnd, 0, alpha, Native.LWA_ALPHA);
 
-    private void OnMouseEnter(object sender, MouseEventArgs e)
+    private void OnMouseEnter(object sender, MouseEventArgs e) => KeepVisible();
+
+    private void OnMouseLeave(object sender, MouseEventArgs e)
+    {
+        if (_pressedAt == null && !ContextMenu.IsOpen) _dismissTimer.Start();
+    }
+
+    private void KeepVisible()
     {
         _dismissTimer.Stop();
         if (_fadingOut)
@@ -150,11 +160,6 @@ public partial class ToastWindow : Window
             _animationStart = Environment.TickCount64;
             _animation.Start();
         }
-    }
-
-    private void OnMouseLeave(object sender, MouseEventArgs e)
-    {
-        if (_pressedAt == null) _dismissTimer.Start();
     }
 
     private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -186,7 +191,42 @@ public partial class ToastWindow : Window
         if (_pressedAt == null) return;
 
         _pressedAt = null;
+
+        // A single download opens like a list row; several can't share one click, so show them all.
+        if (_paths.Length == 1) OnOpenClick(sender, e);
+        else OnShowListClick(sender, e);
+    }
+
+    private void OnOpenClick(object sender, RoutedEventArgs e)
+    {
         Dismiss();
-        Clicked?.Invoke();
+        ShellActions.Open(_latestPath);
+    }
+
+    private void OnShowInFolderClick(object sender, RoutedEventArgs e)
+    {
+        Dismiss();
+        ShellActions.ShowInFolder(_latestPath);
+    }
+
+    private void OnShowListClick(object sender, RoutedEventArgs e)
+    {
+        Dismiss();
+        ShowListRequested?.Invoke();
+    }
+
+    // The notification stays up while its menu is open.
+    private void OnMenuOpened(object sender, RoutedEventArgs e)
+    {
+        KeepVisible();
+
+        // The notification never takes focus by itself, but a menu only closes on an outside click or Esc
+        // when its window is in the foreground. The right-click just given allows this.
+        Native.SetForegroundWindow(_hwnd);
+    }
+
+    private void OnMenuClosed(object sender, RoutedEventArgs e)
+    {
+        if (IsVisible) RestartDismissTimer();
     }
 }
