@@ -69,9 +69,9 @@ public partial class PopupWindow : Window
         {
             UpdatePowerMode();
 
-            // Partial files are only polled while someone can see the progress.
+            // Partial files are polled while someone can see the progress, or while the tray icon shows one.
             if (IsVisible) _activePoll.Start();
-            else _activePoll.Stop();
+            else if (!IsDownloading) _activePoll.Stop();
 
             if (!IsVisible)
             {
@@ -113,6 +113,10 @@ public partial class PopupWindow : Window
         TaskbarProbe.WarmUp();
         StartWatching();
         ShowItems(DownloadsFolder.ReadRecent());
+
+        // Catches a download already running at startup. Later ones are noticed when their partial
+        // file is created; size changes of a file still open for writing aren't reported reliably.
+        _activePoll.Start();
     }
     /// <summary>Efficiency mode only while none of the app's windows can be seen.</summary>
     public void UpdatePowerMode()
@@ -210,6 +214,9 @@ public partial class PopupWindow : Window
             FileSystemEventHandler changed = (_, e) =>
             {
                 if (!DownloadsFolder.IsInProgress(e.Name)) ScheduleRefresh();
+
+                // A browser writing a partial file wakes the polling that tells the tray icon to animate.
+                else if (!IsDownloading) Dispatcher.BeginInvoke(() => _activePoll.Start());
             };
             _watcher.Created += changed;
             _watcher.Deleted += changed;
@@ -313,7 +320,22 @@ public partial class PopupWindow : Window
         }
         ActiveItems.Visibility = _active.Items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         if (IsVisible && _active.Items.Count != before) PositionNearAnchor();
+
+        bool downloading = _active.Items.Any(download => !download.IsPaused);
+        if (downloading != IsDownloading)
+        {
+            IsDownloading = downloading;
+            DownloadingChanged?.Invoke();
+        }
+
+        // Paused or finished downloads need no polling until the next write wakes it.
+        if (!IsVisible && !downloading) _activePoll.Stop();
     }
+
+    /// <summary>Whether a download is being written right now.</summary>
+    public bool IsDownloading { get; private set; }
+
+    public event Action? DownloadingChanged;
 
     /// <summary>The full content height, with the list capped at the number of rows chosen in Settings; more rows scroll.</summary>
     private double DesiredPopupHeight()

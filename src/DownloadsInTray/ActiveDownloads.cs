@@ -46,7 +46,7 @@ internal sealed class ActiveDownloads
             ActiveDownload? item = Items.FirstOrDefault(existing => existing.Path.Equals(file.FullName, StringComparison.OrdinalIgnoreCase));
             if (item == null)
             {
-                item = new ActiveDownload(file.FullName, DisplayName(file.Name));
+                item = new ActiveDownload(file.FullName, DisplayName(file));
                 Items.Insert(0, item);
             }
             // Folder listings report the size of a file that is still open for writing late, so ask the file itself.
@@ -56,8 +56,17 @@ internal sealed class ActiveDownloads
     }
 
     // "report.pdf.crdownload" becomes "report.pdf". Chrome names a download "Unconfirmed 123.crdownload"
-    // until its name is known, which is kept as it is.
-    private static string DisplayName(string fileName) => System.IO.Path.GetFileNameWithoutExtension(fileName);
+    // until its name is known, which is kept as it is. Firefox inserts eight random characters after the
+    // first dot ("report.Ab12Cd34.pdf.part") and keeps an empty placeholder under the real name, which
+    // confirms the real name when it exists.
+    private static string DisplayName(FileInfo file)
+    {
+        string name = System.IO.Path.GetFileNameWithoutExtension(file.Name);
+        string withoutTag = FirefoxTag.Replace(name, string.Empty, 1);
+        return withoutTag != name && File.Exists(System.IO.Path.Combine(file.DirectoryName!, withoutTag)) ? withoutTag : name;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex FirefoxTag = new(@"\.[A-Za-z0-9]{8}(?=\.|$)");
 }
 
 internal sealed class ActiveDownload : INotifyPropertyChanged
