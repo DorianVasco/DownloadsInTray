@@ -55,6 +55,8 @@ This puts the release files in `dist\`:
 | `DownloadsInTray-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `DownloadsInTray-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
 
+It also builds `DownloadsInTray-<version>-x64.msix` for the Microsoft Store. Before uploading, fill in the three identity values from Partner Center in `installer\msix\store-identity.json`. The Store signs the package. In the Store version, start at login is a Windows startup task that you manage under Settings > Apps > Startup.
+
 The setup is only built when [Inno Setup 6](https://jrsoftware.org/isinfo.php) is installed (`winget install JRSoftware.InnoSetup --scope user`). Both exes also run on their own from any folder.
 
 The names and version come from `src\DownloadsInTray\DownloadsInTray.csproj`: `<Product>` is the display name, `<AssemblyName>` the file name, and `<Version>` the version.

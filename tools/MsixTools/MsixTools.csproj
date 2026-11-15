@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Only restored, never built: fetches Microsoft's makeappx.exe from NuGet for build-release.ps1,
+       so packaging the MSIX doesn't need the Windows SDK installed. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.*" ExcludeAssets="all" />
+  </ItemGroup>
+
+</Project>

@@ -18,7 +18,9 @@ internal static class LegacyMigration
         try
         {
             MoveSettings();
-            MoveStartAtLogin();
+
+            // The Store version starts at login through its package's startup task instead.
+            if (!Packaging.IsPackaged) MoveStartAtLogin();
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {

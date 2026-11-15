@@ -11,7 +11,15 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         Title = $"{AppInfo.Name} Settings";
-        StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
+        if (Packaging.IsPackaged)
+        {
+            StartAtLoginPanel.Visibility = Visibility.Collapsed;
+            StartupAppsPanel.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
+        }
         MonochromeTrayIcon.IsChecked = AppSettings.Current.MonochromeTrayIcon;
         NotificationTime.Minimum = AppSettings.MinNotificationSeconds;
         NotificationTime.Maximum = AppSettings.MaxNotificationSeconds;
@@ -28,6 +36,8 @@ public partial class SettingsWindow : Window
     {
         StartupRegistration.IsEnabled = StartAtLogin.IsChecked == true;
     }
+
+    private void OnStartupAppsClick(object sender, RoutedEventArgs e) => ShellActions.Open("ms-settings:startupapps");
 
     private void OnMonochromeTrayIconClick(object sender, RoutedEventArgs e)
     {

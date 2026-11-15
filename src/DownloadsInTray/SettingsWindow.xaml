@@ -9,14 +9,27 @@
         WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True">
     <StackPanel Margin="24,20">
-        <CheckBox x:Name="StartAtLogin"
-                  Content="Start at login"
-                  Click="OnStartAtLoginClick" />
-        <TextBlock Margin="28,2,0,0"
-                   FontSize="12"
-                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   Text="Makes the first click after a restart instant."
-                   TextWrapping="Wrap" />
+        <StackPanel x:Name="StartAtLoginPanel">
+            <CheckBox x:Name="StartAtLogin"
+                      Content="Start at login"
+                      Click="OnStartAtLoginClick" />
+            <TextBlock Margin="28,2,0,0"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Makes the first click after a restart instant."
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- The Store version starts at login through Windows' startup apps list instead. -->
+        <StackPanel x:Name="StartupAppsPanel" Visibility="Collapsed">
+            <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="Start at login" />
+            <TextBlock Margin="0,2,0,6"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="On by default. Windows manages it with the other startup apps."
+                       TextWrapping="Wrap" />
+            <Button HorizontalAlignment="Left" Content="Open startup apps" Click="OnStartupAppsClick" />
+        </StackPanel>
 
         <CheckBox x:Name="MonochromeTrayIcon"
                   Margin="0,16,0,0"

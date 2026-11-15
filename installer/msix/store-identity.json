@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy these three values from Partner Center: Apps and games > Downloads in Tray > Product management > Product identity. The MSIX is only accepted by the Store when they match exactly.",
+  "IdentityName": "PLACEHOLDER.DownloadsInTray",
+  "Publisher": "CN=00000000-0000-0000-0000-000000000000",
+  "PublisherDisplayName": "PLACEHOLDER Publisher display name"
+}

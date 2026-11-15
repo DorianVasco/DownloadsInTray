@@ -1,4 +1,5 @@
-# Renders src\DownloadsInTray\Assets\icon.svg into the app's .ico (16 to 256 px, PNG-compressed).
+# Renders src\DownloadsInTray\Assets\icon.svg into the app's .ico (16 to 256 px, PNG-compressed),
+# or with -StoreAssets <folder> into the PNG logos the MSIX package for the Microsoft Store needs.
 # Run with Windows PowerShell (powershell.exe), which renders WPF on an STA thread:
 #   powershell -NoProfile -File tools\build-icon.ps1
 # Handles what icon.svg uses: filled paths sharing one linear gradient, as exported by Affinity and others.
@@ -6,7 +7,8 @@ param(
     [string]$Svg = (Join-Path $PSScriptRoot '..\src\DownloadsInTray\Assets\icon.svg'),
     [string]$Ico = (Join-Path $PSScriptRoot '..\src\DownloadsInTray\Assets\DownloadsInTray.ico'),
     # Every size Windows 11 asks for: title bar, tray, taskbar and Start at 100 to 400 % scaling.
-    [int[]]$Sizes = @(16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 80, 96, 128, 256)
+    [int[]]$Sizes = @(16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 80, 96, 128, 256),
+    [string]$StoreAssets
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase
@@ -56,16 +58,18 @@ foreach ($path in $doc.SelectNodes('//s:path', $ns)) {
 }
 $geometry.Freeze()
 
-$images = foreach ($size in $Sizes) {
+# Draws the icon at $iconSize pixels, centered on a transparent $width x $height canvas, as PNG bytes.
+function Render-Png([int]$width, [int]$height, [double]$iconSize) {
     $visual = New-Object System.Windows.Media.DrawingVisual
     $context = $visual.RenderOpen()
-    $scale = $size / [Math]::Max($viewBox[2], $viewBox[3])
+    $scale = $iconSize / [Math]::Max($viewBox[2], $viewBox[3])
+    $context.PushTransform((New-Object System.Windows.Media.TranslateTransform (($width - $iconSize) / 2), (($height - $iconSize) / 2)))
     $context.PushTransform((New-Object System.Windows.Media.ScaleTransform $scale, $scale))
     $context.PushTransform((New-Object System.Windows.Media.TranslateTransform (-$viewBox[0]), (-$viewBox[1])))
     $context.DrawGeometry($brush, $null, $geometry)
     $context.Close()
 
-    $bitmap = New-Object System.Windows.Media.Imaging.RenderTargetBitmap $size, $size, 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
+    $bitmap = New-Object System.Windows.Media.Imaging.RenderTargetBitmap $width, $height, 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
     $bitmap.Render($visual)
     $encoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
     $encoder.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($bitmap))
@@ -74,6 +78,32 @@ $images = foreach ($size in $Sizes) {
     , $stream.ToArray()
 }
 
+if ($StoreAssets) {
+    # Logos named as the MSIX manifest expects; see "Construct your Windows app's icon" on Microsoft Learn.
+    New-Item -ItemType Directory -Force $StoreAssets | Out-Null
+    $folder = (Resolve-Path $StoreAssets).Path
+    function Save($name, $bytes) { [System.IO.File]::WriteAllBytes((Join-Path $folder $name), $bytes) }
+    $scales = @{ 100 = 1.0; 125 = 1.25; 150 = 1.5; 200 = 2.0; 400 = 4.0 }
+    foreach ($scale in $scales.Keys) {
+        $f = $scales[$scale]
+        # App list, taskbar and Start icon: the drawing fills the square, which has its own margins.
+        $s44 = [int][Math]::Round(44 * $f); Save "Square44x44Logo.scale-$scale.png" (Render-Png $s44 $s44 $s44)
+        # Tiles and store logo keep the icon at half the tile height, like Microsoft's own tiles.
+        $s150 = [int][Math]::Round(150 * $f); Save "Square150x150Logo.scale-$scale.png" (Render-Png $s150 $s150 ($s150 * 0.5))
+        $w310 = [int][Math]::Round(310 * $f); $h310 = [int][Math]::Round(150 * $f); Save "Wide310x150Logo.scale-$scale.png" (Render-Png $w310 $h310 ($h310 * 0.5))
+        $s50 = [int][Math]::Round(50 * $f); Save "StoreLogo.scale-$scale.png" (Render-Png $s50 $s50 $s50)
+    }
+    # Exact pixel sizes for the taskbar and Start; the unplated variants keep a transparent background
+    # on dark and light themes instead of a colored plate.
+    foreach ($size in $Sizes) {
+        $png = Render-Png $size $size $size
+        foreach ($suffix in '', '_altform-unplated', '_altform-lightunplated') { Save "Square44x44Logo.targetsize-$size$suffix.png" $png }
+    }
+    "Wrote Store logos to $folder"
+    return
+}
+
+$images = foreach ($size in $Sizes) { , (Render-Png $size $size $size) }
 # ICO container: header, one directory entry per size, then the PNG images.
 $out = New-Object System.IO.MemoryStream
 $writer = New-Object System.IO.BinaryWriter $out
