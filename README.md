@@ -14,6 +14,21 @@ Requires the .NET 10 SDK (the installed app only needs the .NET 10 Desktop Runti
 
 This publishes to `%LOCALAPPDATA%\Programs\WinDownload` and adds a Start menu shortcut. Windows doesn't let apps pin themselves, so open Start, search for WinDownload, right-click it and choose **Pin to taskbar**.
 
+### Release builds
+
+```powershell
+./build-release.ps1
+```
+
+This puts two files in `dist\`:
+
+| File | Size | Needs |
+|---|---|---|
+| `WinDownload-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
+| `WinDownload-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
+
+Either one runs on its own from any folder. The version comes from `<Version>` in `src\WinDownload\WinDownload.csproj`.
+
 ## Use
 
 - **Click the icon** to open or close the popup. Clicking elsewhere or pressing Esc also closes it.

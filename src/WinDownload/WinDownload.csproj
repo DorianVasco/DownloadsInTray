@@ -29,6 +29,12 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
 
+  <!-- The self-contained build bundles the runtime and WPF's native libraries into the one exe. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(SelfContained)' == 'true'">
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Assets\WinDownload.ico" LogicalName="WinDownload.ico" />
   </ItemGroup>
