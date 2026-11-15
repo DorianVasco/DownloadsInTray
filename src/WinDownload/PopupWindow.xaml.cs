@@ -28,6 +28,8 @@ public partial class PopupWindow : Window
     private readonly ShellIconLoader _icons;
     private readonly ToastWindow _toast = new();
     private readonly NewDownloadTracker _newDownloads = new();
+    private readonly ActiveDownloads _active = new();
+    private readonly DispatcherTimer _activePoll;
     private SettingsWindow? _settings;
     private readonly DispatcherTimer _refreshDebounce;
     private readonly DispatcherTimer _mouseReleaseWatch;
@@ -50,6 +52,15 @@ public partial class PopupWindow : Window
             (_, _) => OnFolderChanged(),
             Dispatcher);
         _refreshDebounce.Stop();
+        ActiveItems.ItemsSource = _active.Items;
+        _activePoll = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) => PollActive(), Dispatcher);
+        _activePoll.Stop();
+        IsVisibleChanged += (_, _) =>
+        {
+            // Partial files are only polled while someone can see the progress.
+            if (IsVisible) _activePoll.Start();
+            else _activePoll.Stop();
+        };
         _mouseReleaseWatch = new DispatcherTimer(
             TimeSpan.FromMilliseconds(15),
             DispatcherPriority.Input,
@@ -118,6 +129,7 @@ public partial class PopupWindow : Window
         _toast.Dismiss();
         Native.GetCursorPos(out _anchor);
         ShowItems(DownloadsFolder.ReadRecent());
+        PollActive();
         Scroller.ScrollToTop();
         PositionNearAnchor();
         Show();
@@ -188,6 +200,14 @@ public partial class PopupWindow : Window
         Items.ItemsSource = items;
         EmptyMessage.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         _icons.Load(items);
+    }
+
+    private void PollActive()
+    {
+        int before = _active.Items.Count;
+        _active.Poll();
+        ActiveItems.Visibility = _active.Items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (IsVisible && _active.Items.Count != before) PositionNearAnchor();
     }
 
     private void PositionNearAnchor()

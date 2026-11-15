@@ -60,6 +60,7 @@
     <Grid x:Name="Root">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -71,8 +72,46 @@
                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                    Text="Downloads" />
 
+        <ItemsControl x:Name="ActiveItems"
+                      Grid.Row="1"
+                      Margin="6,0,6,6"
+                      Focusable="False"
+                      Visibility="Collapsed">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="8,4,8,6" ToolTip="{Binding Name}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="36" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock HorizontalAlignment="Left"
+                                   VerticalAlignment="Center"
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   FontSize="22"
+                                   Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                                   Text="&#xE896;" />
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                       Text="{Binding Name}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <ProgressBar x:Name="Bar" Margin="0,5,0,4" IsIndeterminate="True" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Text="{Binding Details}" />
+                        </StackPanel>
+                    </Grid>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                            <Setter TargetName="Bar" Property="IsIndeterminate" Value="False" />
+                            <Setter TargetName="Bar" Property="Value" Value="0" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
         <TextBlock x:Name="EmptyMessage"
-                   Grid.Row="1"
+                   Grid.Row="2"
                    Margin="16,24"
                    HorizontalAlignment="Center"
                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
@@ -80,7 +119,7 @@
                    Visibility="Collapsed" />
 
         <ScrollViewer x:Name="Scroller"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       Focusable="False"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
@@ -127,7 +166,7 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <Grid Grid.Row="2" Margin="6,6,6,8">
+        <Grid Grid.Row="3" Margin="6,6,6,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />

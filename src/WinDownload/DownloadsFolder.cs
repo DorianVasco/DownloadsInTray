@@ -45,7 +45,10 @@ internal static class DownloadsFolder
     private static bool IsListed(FileSystemInfo info)
     {
         if ((info.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0) return false;
-        return info is DirectoryInfo || !IsInProgress(info.Name);
+        if (info is DirectoryInfo) return true;
+
+        // Firefox keeps an empty file under the final name until "<name>.part" is complete.
+        return !IsInProgress(info.Name) && !(info is FileInfo { Length: 0 } && File.Exists(info.FullName + ".part"));
     }
 
     private static DownloadItem ToItem(FileSystemInfo info) => new(

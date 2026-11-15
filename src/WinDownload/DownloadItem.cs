@@ -54,7 +54,7 @@ public sealed class DownloadItem : INotifyPropertyChanged
         return added.ToString("d", CultureInfo.CurrentCulture);
     }
 
-    private static string FormatSize(long bytes)
+    public static string FormatSize(long bytes)
     {
         string[] units = { "B", "KB", "MB", "GB", "TB" };
         double value = bytes;
