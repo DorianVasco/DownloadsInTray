@@ -2,7 +2,7 @@
 
 A Windows 11 alternative to the macOS Dock Downloads stack. Click the pinned taskbar icon to see your recent downloads, newest first, and click one to open it.
 
-![The Downloads in Tray popup above the taskbar, listing recent downloads](docs/images/ui.png)
+The Downloads in Tray popup above the taskbar, listing recent downloads
 
 ## Install
 
@@ -10,41 +10,17 @@ Run `DownloadsInTray-<version>-setup.exe`. It installs for your account only, wi
 
 An earlier install under the old name WinDownload is replaced, and its settings carry over. Pin the new icon and unpin the old one, which no longer works.
 
-## Build
-
-Requires the .NET 10 SDK.
-
-```powershell
-./build-release.ps1
-```
-
-This puts the release files in `dist\`:
-
-| File | Size | Needs |
-|---|---|---|
-| `DownloadsInTray-<version>-setup.exe` | about 66 MB | nothing, installs the self-contained build |
-| `DownloadsInTray-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
-| `DownloadsInTray-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
-
-The setup is only built when [Inno Setup 6](https://jrsoftware.org/isinfo.php) is installed (`winget install JRSoftware.InnoSetup --scope user`). Both exes also run on their own from any folder.
-
-The names and version come from `src\DownloadsInTray\DownloadsInTray.csproj`: `<Product>` is the display name, `<AssemblyName>` the file name, and `<Version>` the version.
-
-For a quick install while developing, `./install.ps1` publishes to `%LOCALAPPDATA%\Programs\DownloadsInTray` and adds a Start menu shortcut, without the setup.
-
 ## Use
 
 - **Click the icon** to open or close the popup. Clicking elsewhere or pressing Esc also closes it.
-- **Click a row** to open the item, or right-click it for **Show in folder**. Arrow keys and Enter work too.
-
-  ![Right-click menu on a download with Open and Show in folder](docs/images/context.png)
+- **Click a row** to open the item, or right-click it for **Show in folder**. Arrow keys and Enter work too.\
+  Right-click menu on a download with Open and Show in folder
 - **Running downloads** from Chrome, Edge and Firefox appear at the top with a moving bar, the size so far and the speed. A download that stops growing for 5 seconds shows as paused. If you watched a download here, the popup comes back without taking focus when it finishes, with the file marked, and closes again after the notification time unless you hover or click it. Browsers don't record the final size in their unfinished files, so there's no percentage.
 - **Drag a row** into a folder or app. Explorer moves it within a drive and copies it across drives.
 - **Notification:** a small notice fades in above the tray when something new lands in Downloads, and clicking it opens the file (or the list, when several arrived together). Right-click it for **Open**, **Show in folder** and **Show all downloads**. Drag it into a folder or app to move all the files it announces. It stays quiet while the popup is open and when Windows reports that you shouldn't be interrupted, such as during full-screen apps.
 - **Tray icon:** it shows the app is running. Left-click toggles the popup. Right-click opens a menu with Show downloads, Open Downloads folder, Settings and Quit. Windows may hide it under the tray's ^ arrow until you drag it out.
-- **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, how long notifications stay up (2 to 30 seconds), and how many items the popup shows before scrolling (3 to 30), which sets its height. **Quit Downloads in Tray** stops the background process.
-
-  ![The settings window with Start at login, notification time and visible items](docs/images/settings.png)
+- **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, how long notifications stay up (2 to 30 seconds), and how many items the popup shows before scrolling (3 to 30), which sets its height. **Quit Downloads in Tray** stops the background process.\
+  The settings window with Start at login, notification time and visible items
 
 ## How it works
 
@@ -56,4 +32,30 @@ The list shows files and folders from the Downloads known folder, sorted by crea
 
 ## Uninstall
 
-Unpin the icon, then uninstall Downloads in Tray from **Settings > Apps > Installed apps**. That also removes its settings and the start-at-login entry.
+Unpin the icon, then uninstall Downloads in Tray from **Settings \> Apps \> Installed apps**. That also removes its settings and the start-at-login entry.
+
+## Build
+
+Requires the .NET 10 SDK.
+
+```
+./build-release.ps1
+```
+
+This puts the release files in `dist\`:
+
+| File | Size | Needs |
+| --- | --- | --- |
+| `DownloadsInTray-<version>-setup.exe` | about 66 MB | nothing, installs the self-contained build |
+| `DownloadsInTray-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
+| `DownloadsInTray-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
+
+The setup is only built when [Inno Setup 6](https://jrsoftware.org/isinfo.php) is installed (`winget install JRSoftware.InnoSetup --scope user`). Both exes also run on their own from any folder.
+
+The names and version come from `src\DownloadsInTray\DownloadsInTray.csproj`: `<Product>` is the display name, `<AssemblyName>` the file name, and `<Version>` the version.
+
+For a quick install while developing, `./install.ps1` publishes to `%LOCALAPPDATA%\Programs\DownloadsInTray` and adds a Start menu shortcut, without the setup.
+
+## Disclaimer
+
+Claude Code was used creating this app. I kept the code small and (hopefully) efficient and I had a look on it to ensure it does not contain bullshit.
