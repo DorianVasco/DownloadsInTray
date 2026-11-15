@@ -17,16 +17,17 @@ namespace DownloadsInTray;
 /// </summary>
 internal static class IconAnimation
 {
-    private const string SvgResource = "icon.svg";
+
     private static readonly XNamespace Svg = "http://www.w3.org/2000/svg";
 
     // Paths starting below this share of the icon's height form the tray bar; the rest is the arrow.
     private const double BarTopShare = 0.7;
 
-    public static System.Drawing.Icon[] CreateFrames(int pixels, int count)
+    /// <summary>Draws <paramref name="count"/> frames from an embedded SVG; the first shows the icon at rest.</summary>
+    public static System.Drawing.Icon[] CreateFrames(string svgResource, int pixels, int count)
     {
         XDocument doc;
-        using (Stream stream = typeof(IconAnimation).Assembly.GetManifestResourceStream(SvgResource)!)
+        using (Stream stream = typeof(IconAnimation).Assembly.GetManifestResourceStream(svgResource)!)
         using (var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }))
         {
             doc = XDocument.Load(reader);
@@ -34,7 +35,7 @@ internal static class IconAnimation
 
         double[] viewBox = doc.Root!.Attribute("viewBox")!.Value
             .Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(Parse).ToArray();
-        Brush brush = GradientBrush(doc);
+        Brush brush = Fill(doc);
 
         var bar = new GeometryGroup();
         var arrow = new GeometryGroup();
@@ -78,9 +79,17 @@ internal static class IconAnimation
     // The icon's shapes share one gradient, so the first one is used for all of them. Handles the forms
     // design tools export: plain x1/y1/x2/y2, or unit coordinates moved by a gradientTransform matrix,
     // and stop colors as attributes or inside a style.
-    private static Brush GradientBrush(XDocument doc)
+    private static Brush Fill(XDocument doc)
     {
-        XElement gradient = doc.Descendants(Svg + "linearGradient").First();
+        // Single-color drawings, such as the monochrome icons, fill their paths with a plain color.
+        XElement? gradient = doc.Descendants(Svg + "linearGradient").FirstOrDefault();
+        if (gradient == null)
+        {
+            var solid = new SolidColorBrush((Color)ColorConverter.ConvertFromString(doc.Descendants(Svg + "path").First().Attribute("fill")!.Value));
+            solid.Freeze();
+            return solid;
+        }
+
         Point start = new(Number(gradient, "x1"), Number(gradient, "y1"));
         Point end = new(Number(gradient, "x2"), Number(gradient, "y2"));
         if (gradient.Attribute("gradientTransform")?.Value is string transform)

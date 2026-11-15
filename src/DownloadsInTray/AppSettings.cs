@@ -34,8 +34,15 @@ internal sealed class AppSettings
         set => _visibleItems = Math.Clamp(value, MinVisibleItems, MaxVisibleItems);
     }
 
+    /// <summary>Shows the tray icon in plain white or black, matching the taskbar, like Windows' own tray icons.</summary>
+    public bool MonochromeTrayIcon { get; set; }
+
+    /// <summary>Raised after a setting changes and is saved.</summary>
+    public static event Action? Changed;
+
     public void Save()
     {
+        Changed?.Invoke();
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);

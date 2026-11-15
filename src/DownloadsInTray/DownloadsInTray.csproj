@@ -40,6 +40,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Assets\DownloadsInTray.ico" LogicalName="DownloadsInTray.ico" />
     <EmbeddedResource Include="Assets\icon.svg" LogicalName="icon.svg" />
+    <EmbeddedResource Include="Assets\icon2-mono-dark.svg" LogicalName="icon2-mono-dark.svg" />
+    <EmbeddedResource Include="Assets\icon2-mono-light.svg" LogicalName="icon2-mono-light.svg" />
   </ItemGroup>
 
 </Project>

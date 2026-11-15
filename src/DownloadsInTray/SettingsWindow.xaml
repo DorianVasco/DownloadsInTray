@@ -18,6 +18,16 @@
                    Text="Makes the first click after a restart instant."
                    TextWrapping="Wrap" />
 
+        <CheckBox x:Name="MonochromeTrayIcon"
+                  Margin="0,16,0,0"
+                  Content="Monochrome tray icon"
+                  Click="OnMonochromeTrayIconClick" />
+        <TextBlock Margin="28,2,0,0"
+                   FontSize="12"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="White on a dark taskbar, black on a light one, like Windows' own tray icons."
+                   TextWrapping="Wrap" />
+
         <Grid Margin="0,24,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />

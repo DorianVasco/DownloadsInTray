@@ -10,7 +10,9 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
-        Title = $"{AppInfo.Name} Settings";        StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
+        Title = $"{AppInfo.Name} Settings";
+        StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
+        MonochromeTrayIcon.IsChecked = AppSettings.Current.MonochromeTrayIcon;
         NotificationTime.Minimum = AppSettings.MinNotificationSeconds;
         NotificationTime.Maximum = AppSettings.MaxNotificationSeconds;
         NotificationTime.Value = AppSettings.Current.NotificationSeconds;
@@ -25,6 +27,12 @@ public partial class SettingsWindow : Window
     private void OnStartAtLoginClick(object sender, RoutedEventArgs e)
     {
         StartupRegistration.IsEnabled = StartAtLogin.IsChecked == true;
+    }
+
+    private void OnMonochromeTrayIconClick(object sender, RoutedEventArgs e)
+    {
+        AppSettings.Current.MonochromeTrayIcon = MonochromeTrayIcon.IsChecked == true;
+        AppSettings.Current.Save();
     }
 
     private void OnNotificationTimeChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
