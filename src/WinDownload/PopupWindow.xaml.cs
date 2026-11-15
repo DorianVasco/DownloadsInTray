@@ -62,6 +62,8 @@ public partial class PopupWindow : Window
         Activated += (_, _) => _passiveHide.Stop();
         IsVisibleChanged += (_, _) =>
         {
+            UpdatePowerMode();
+
             // Partial files are only polled while someone can see the progress.
             if (IsVisible) _activePoll.Start();
             else _activePoll.Stop();
@@ -101,12 +103,34 @@ public partial class PopupWindow : Window
         NativeMenu.AllowDarkMenus(_hwnd);
         _toast.Prepare();
         _toast.ShowListRequested += ShowFromToast;
+        _toast.IsVisibleChanged += (_, _) => UpdatePowerMode();
 
         TaskbarProbe.WarmUp();
         StartWatching();
         ShowItems(DownloadsFolder.ReadRecent());
     }
+    /// <summary>Efficiency mode only while none of the app's windows can be seen.</summary>
+    public void UpdatePowerMode()
+    {
+        if (IsVisible || _toast.IsVisible || _settings != null) PowerMode.Active();
+        else PowerMode.Idle();
+    }
+
     public async void HandleLaunchRequest()
+    {
+        // Leave efficiency mode before any work, so the popup opens at full speed.
+        PowerMode.Active();
+        try
+        {
+            await HandleLaunch();
+        }
+        finally
+        {
+            UpdatePowerMode();
+        }
+    }
+
+    private async Task HandleLaunch()
     {
         if (IsVisible)
         {
@@ -130,6 +154,7 @@ public partial class PopupWindow : Window
     /// <summary>The tray icon's right-click menu.</summary>
     public void ShowOptionsMenu()
     {
+        PowerMode.Active();
         ClearClosingClick();
         new NativeMenu()
             .Add("Show downloads", ShowFromToast, isDefault: true)
@@ -138,6 +163,7 @@ public partial class PopupWindow : Window
             .AddSeparator()
             .Add("Quit WinDownload", Quit)
             .ShowAtCursor(_hwnd);
+        UpdatePowerMode();
     }
 
     private void ShowFromToast()
@@ -503,10 +529,15 @@ public partial class PopupWindow : Window
         if (_settings == null)
         {
             _settings = new SettingsWindow();
-            _settings.Closed += (_, _) => _settings = null;
+            _settings.Closed += (_, _) =>
+            {
+                _settings = null;
+                UpdatePowerMode();
+            };
         }
         _settings.Show();
         _settings.Activate();
+        UpdatePowerMode();
     }
 
     // A closed WPF window can't be shown again, so Alt+F4 and similar only hide the popup.

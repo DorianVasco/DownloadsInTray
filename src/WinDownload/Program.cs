@@ -72,6 +72,10 @@ internal static class Program
         {
             app.Dispatcher.BeginInvoke(popup.HandleLaunchRequest);
         }
+        else
+        {
+            app.Dispatcher.BeginInvoke(popup.UpdatePowerMode);
+        }
 
         app.Run();
     }
