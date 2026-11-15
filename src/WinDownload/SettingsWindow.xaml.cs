@@ -10,6 +10,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        Title = $"{AppInfo.Name} Settings";
         StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
         NotificationTime.Minimum = AppSettings.MinNotificationSeconds;
         NotificationTime.Maximum = AppSettings.MaxNotificationSeconds;

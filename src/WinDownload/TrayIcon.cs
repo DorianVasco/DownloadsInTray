@@ -16,7 +16,7 @@ internal sealed class TrayIcon : IDisposable
     {
         using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream(IconResource)!;
         _icon = new Icon(stream, SystemInformation.SmallIconSize);
-        _notifyIcon = new NotifyIcon { Icon = _icon, Text = "WinDownload", Visible = true };
+        _notifyIcon = new NotifyIcon { Icon = _icon, Text = AppInfo.Name, Visible = true };
         _notifyIcon.MouseUp += (_, e) =>
         {
             if (e.Button == MouseButtons.Left) popup.HandleLaunchRequest();

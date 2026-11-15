@@ -27,7 +27,9 @@ This puts two files in `dist\`:
 | `WinDownload-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `WinDownload-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
 
-Either one runs on its own from any folder. The version comes from `<Version>` in `src\WinDownload\WinDownload.csproj`.
+With [Inno Setup 6](https://jrsoftware.org/isinfo.php) installed (`winget install JRSoftware.InnoSetup --scope user`), it also builds `WinDownload-<version>-setup.exe`. That's a per-user installer with no admin prompt, a Start menu entry, an optional "Start with Windows" checkbox and an uninstaller in Windows Settings.
+
+Either exe also runs on its own from any folder. The app's name comes from `<Product>` in the project file. The version comes from `<Version>` in `src\WinDownload\WinDownload.csproj`.
 
 ## Use
 

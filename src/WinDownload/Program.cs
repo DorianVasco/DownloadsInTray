@@ -12,8 +12,8 @@ namespace WinDownload;
 /// </summary>
 internal static class Program
 {
-    private const string MutexName = @"Local\WinDownload.Instance";
-    private const string ShowEventName = @"Local\WinDownload.Show";
+    private static readonly string MutexName = $@"Local\{AppInfo.Name}.Instance";
+    private static readonly string ShowEventName = $@"Local\{AppInfo.Name}.Show";
     private const string BackgroundArgument = "--background";
 
     [STAThread]

@@ -7,7 +7,7 @@ namespace WinDownload;
 /// <summary>Tells whether a screen point is on this app's own taskbar or tray icon.</summary>
 internal static class TaskbarProbe
 {
-    private const string AppName = "WinDownload";
+    private static readonly string AppName = AppInfo.Name;
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(2);
 
     /// <summary>UI Automation is slow on first use, so load it before the first click needs an answer.</summary>

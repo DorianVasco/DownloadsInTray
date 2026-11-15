@@ -47,6 +47,7 @@ public partial class PopupWindow : Window
     public PopupWindow()
     {
         InitializeComponent();
+        Title = AppInfo.Name;
         _icons = new ShellIconLoader(Dispatcher);
         _refreshDebounce = new DispatcherTimer(
             TimeSpan.FromMilliseconds(300),
@@ -161,7 +162,7 @@ public partial class PopupWindow : Window
             .Add("Open Downloads folder", OpenDownloadsFolder)
             .Add("Settings", OpenSettings)
             .AddSeparator()
-            .Add("Quit WinDownload", Quit)
+            .Add($"Quit {AppInfo.Name}", Quit)
             .ShowAtCursor(_hwnd);
         UpdatePowerMode();
     }
@@ -519,7 +520,7 @@ public partial class PopupWindow : Window
         new NativeMenu()
             .Add("Settings", OpenSettings)
             .AddSeparator()
-            .Add("Quit WinDownload", Quit)
+            .Add($"Quit {AppInfo.Name}", Quit)
             .Show(_hwnd, (int)below.X, (int)below.Y);
     }
 

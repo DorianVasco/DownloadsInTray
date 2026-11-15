@@ -6,7 +6,7 @@ namespace WinDownload;
 internal static class StartupRegistration
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string ValueName = "WinDownload";
+    private static readonly string ValueName = AppInfo.Name;
 
     public static bool IsEnabled
     {

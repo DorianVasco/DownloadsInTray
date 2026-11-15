@@ -4,14 +4,14 @@ using System.Text.Json;
 
 namespace WinDownload;
 
-/// <summary>User preferences, kept in %LOCALAPPDATA%\WinDownload\settings.json.</summary>
+/// <summary>User preferences, kept in %LOCALAPPDATA%\<app name>\settings.json.</summary>
 internal sealed class AppSettings
 {
     public const int MinNotificationSeconds = 2;
     public const int MaxNotificationSeconds = 30;
 
     private static readonly string FilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinDownload", "settings.json");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppInfo.Name, "settings.json");
 
     public const int MinVisibleItems = 3;
     public const int MaxVisibleItems = 30;

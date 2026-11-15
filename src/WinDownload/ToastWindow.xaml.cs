@@ -34,6 +34,7 @@ public partial class ToastWindow : Window
     public ToastWindow()
     {
         InitializeComponent();
+        Title = $"{AppInfo.Name} notification";
         _animation = new DispatcherTimer(TimeSpan.FromMilliseconds(15), DispatcherPriority.Render, (_, _) => OnAnimationTick(), Dispatcher);
         _animation.Stop();
         _dismissTimer = new DispatcherTimer(TimeSpan.FromSeconds(AppSettings.Current.NotificationSeconds), DispatcherPriority.Normal, (_, _) => FadeOut(), Dispatcher);
