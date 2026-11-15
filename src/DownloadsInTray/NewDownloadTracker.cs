@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Reports items that are new to the whole folder, not just to the capped list shown in the popup.</summary>
 internal sealed class NewDownloadTracker

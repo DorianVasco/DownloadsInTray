@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Opens items the way Explorer does, so the shell handles file associations and security prompts.</summary>
 internal static class ShellActions

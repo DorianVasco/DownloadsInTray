@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 internal static class Native
 {

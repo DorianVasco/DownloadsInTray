@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Starts a file drag from a flyout. The target performs the transfer: Explorer moves within a drive and copies across drives.</summary>
 internal static class FileDrag

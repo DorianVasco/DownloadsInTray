@@ -11,7 +11,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 public partial class PopupWindow : Window
 {

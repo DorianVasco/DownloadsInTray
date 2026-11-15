@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>
 /// Opts the process into EcoQoS while it waits in the tray, so Windows can run it on efficient cores

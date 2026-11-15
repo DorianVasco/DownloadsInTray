@@ -7,13 +7,13 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <StartupObject>WinDownload.Program</StartupObject>
-    <ApplicationIcon>Assets\WinDownload.ico</ApplicationIcon>
+    <StartupObject>DownloadsInTray.Program</StartupObject>
+    <ApplicationIcon>Assets\DownloadsInTray.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- The app's name: the exe, windows, settings folder and setup program all follow it. -->
-    <Product>WinDownload</Product>
-    <AssemblyName>$(Product)</AssemblyName>
-    <RootNamespace>WinDownload</RootNamespace>
+    <!-- Product is the display name; AssemblyName names the exe, settings folder and setup files. -->
+    <Product>Downloads in Tray</Product>
+    <AssemblyName>DownloadsInTray</AssemblyName>
+    <RootNamespace>DownloadsInTray</RootNamespace>
     <Version>1.0.0</Version>
     <!-- Application.ThemeMode (Fluent theme) is still flagged experimental. -->
     <!-- WFO0003: DPI awareness stays in app.manifest because WPF, not WinForms, owns the UI. -->
@@ -38,7 +38,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Assets\WinDownload.ico" LogicalName="WinDownload.ico" />
+    <EmbeddedResource Include="Assets\DownloadsInTray.ico" LogicalName="DownloadsInTray.ico" />
   </ItemGroup>
 
 </Project>

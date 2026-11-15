@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Tells whether a screen point is on this app's own taskbar or tray icon.</summary>
 internal static class TaskbarProbe

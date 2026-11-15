@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Changes apply and save immediately, so there is no Save button.</summary>
 public partial class SettingsWindow : Window

@@ -7,7 +7,7 @@ using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Loads shell thumbnails and icons on a background STA thread so the list can show immediately.</summary>
 internal sealed class ShellIconLoader

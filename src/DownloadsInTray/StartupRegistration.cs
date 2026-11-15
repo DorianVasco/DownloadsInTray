@@ -1,12 +1,12 @@
 using System;
 using Microsoft.Win32;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 internal static class StartupRegistration
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private static readonly string ValueName = AppInfo.Name;
+    private static readonly string ValueName = AppInfo.FileName;
 
     public static bool IsEnabled
     {

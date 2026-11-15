@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Media;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 public sealed class DownloadItem : INotifyPropertyChanged
 {

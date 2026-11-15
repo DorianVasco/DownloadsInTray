@@ -1,35 +1,36 @@
-# WinDownload
+# Downloads in Tray
 
 A Windows 11 alternative to the macOS Dock Downloads stack. Click the pinned taskbar icon to see your recent downloads, newest first, and click one to open it.
 
-![The WinDownload popup above the taskbar, listing recent downloads](docs/images/ui.png)
+![The Downloads in Tray popup above the taskbar, listing recent downloads](docs/images/ui.png)
 
 ## Install
 
-Requires the .NET 10 SDK (the installed app only needs the .NET 10 Desktop Runtime).
+Run `DownloadsInTray-<version>-setup.exe`. It installs for your account only, with no admin prompt, adds a Start menu entry, and offers to start the app with Windows. Windows doesn't let apps pin themselves, so then open Start, search for Downloads in Tray, right-click it and choose **Pin to taskbar**.
 
-```powershell
-./install.ps1
-```
+An earlier install under the old name WinDownload is replaced, and its settings carry over. Pin the new icon and unpin the old one, which no longer works.
 
-This publishes to `%LOCALAPPDATA%\Programs\WinDownload` and adds a Start menu shortcut. Windows doesn't let apps pin themselves, so open Start, search for WinDownload, right-click it and choose **Pin to taskbar**.
+## Build
 
-### Release builds
+Requires the .NET 10 SDK.
 
 ```powershell
 ./build-release.ps1
 ```
 
-This puts two files in `dist\`:
+This puts the release files in `dist\`:
 
 | File | Size | Needs |
 |---|---|---|
-| `WinDownload-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
-| `WinDownload-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
+| `DownloadsInTray-<version>-setup.exe` | about 66 MB | nothing, installs the self-contained build |
+| `DownloadsInTray-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
+| `DownloadsInTray-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
 
-With [Inno Setup 6](https://jrsoftware.org/isinfo.php) installed (`winget install JRSoftware.InnoSetup --scope user`), it also builds `WinDownload-<version>-setup.exe`. That's a per-user installer with no admin prompt, a Start menu entry, an optional "Start with Windows" checkbox and an uninstaller in Windows Settings.
+The setup is only built when [Inno Setup 6](https://jrsoftware.org/isinfo.php) is installed (`winget install JRSoftware.InnoSetup --scope user`). Both exes also run on their own from any folder.
 
-Either exe also runs on its own from any folder. The app's name comes from `<Product>` in the project file. The version comes from `<Version>` in `src\WinDownload\WinDownload.csproj`.
+The names and version come from `src\DownloadsInTray\DownloadsInTray.csproj`: `<Product>` is the display name, `<AssemblyName>` the file name, and `<Version>` the version.
+
+For a quick install while developing, `./install.ps1` publishes to `%LOCALAPPDATA%\Programs\DownloadsInTray` and adds a Start menu shortcut, without the setup.
 
 ## Use
 
@@ -41,7 +42,7 @@ Either exe also runs on its own from any folder. The app's name comes from `<Pro
 - **Drag a row** into a folder or app. Explorer moves it within a drive and copies it across drives.
 - **Notification:** a small notice fades in above the tray when something new lands in Downloads, and clicking it opens the file (or the list, when several arrived together). Right-click it for **Open**, **Show in folder** and **Show all downloads**. Drag it into a folder or app to move all the files it announces. It stays quiet while the popup is open and when Windows reports that you shouldn't be interrupted, such as during full-screen apps.
 - **Tray icon:** it shows the app is running. Left-click toggles the popup. Right-click opens a menu with Show downloads, Open Downloads folder, Settings and Quit. Windows may hide it under the tray's ^ arrow until you drag it out.
-- **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, how long notifications stay up (2 to 30 seconds), and how many items the popup shows before scrolling (3 to 30), which sets its height. **Quit WinDownload** stops the background process.
+- **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, how long notifications stay up (2 to 30 seconds), and how many items the popup shows before scrolling (3 to 30), which sets its height. **Quit Downloads in Tray** stops the background process.
 
   ![The settings window with Start at login, notification time and visible items](docs/images/settings.png)
 
@@ -53,4 +54,4 @@ The list shows files and folders from the Downloads known folder, sorted by crea
 
 ## Uninstall
 
-Turn off **Start at login** if you enabled it, choose **Quit WinDownload**, unpin the icon, then delete `%LOCALAPPDATA%\Programs\WinDownload`, the settings in `%LOCALAPPDATA%\WinDownload` and the WinDownload shortcut in the Start menu.
+Unpin the icon, then uninstall Downloads in Tray from **Settings > Apps > Installed apps**. That also removes its settings and the start-at-login entry.

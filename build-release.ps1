@@ -2,13 +2,15 @@
 #   <name>-<version>-win-x64.exe                small, needs the .NET 10 Desktop Runtime
 #   <name>-<version>-win-x64-self-contained.exe runs anywhere, with the runtime bundled
 #   <name>-<version>-setup.exe                  installer for the self-contained build (needs Inno Setup 6 to build)
-# The name and version come from <Product> and <Version> in src\WinDownload\WinDownload.csproj.
+# <name> is <AssemblyName> in src\DownloadsInTray\DownloadsInTray.csproj, the version is <Version> there,
+# and the setup shows <Product> as the app's name.
 $ErrorActionPreference = 'Stop'
 
-$project = Join-Path $PSScriptRoot 'src\WinDownload\WinDownload.csproj'
+$project = Join-Path $PSScriptRoot 'src\DownloadsInTray\DownloadsInTray.csproj'
 $dist = Join-Path $PSScriptRoot 'dist'
 $properties = ([xml](Get-Content $project)).Project.PropertyGroup
-$name = $properties.Product | Where-Object { $_ } | Select-Object -First 1
+$displayName = $properties.Product | Where-Object { $_ } | Select-Object -First 1
+$name = $properties.AssemblyName | Where-Object { $_ } | Select-Object -First 1
 $version = $properties.Version | Where-Object { $_ } | Select-Object -First 1
 
 $builds = @(
@@ -33,7 +35,7 @@ $iscc = @(
 ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
 if ($iscc) {
-    & $iscc /Q "/DAppName=$name" "/DAppVersion=$version" "/DSourceExe=$(Join-Path $dist $builds[1].Name)" "/DOutputDir=$dist" (Join-Path $PSScriptRoot 'installer\Setup.iss')
+    & $iscc /Q "/DAppName=$displayName" "/DAppFileName=$name" "/DAppVersion=$version" "/DSourceExe=$(Join-Path $dist $builds[1].Name)" "/DOutputDir=$dist" (Join-Path $PSScriptRoot 'installer\Setup.iss')
     if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed to build the setup program' }
 }
 else {

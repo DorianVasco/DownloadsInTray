@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>
 /// Downloads still being written, found by the partial files browsers keep in Downloads:

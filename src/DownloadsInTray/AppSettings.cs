@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>User preferences, kept in %LOCALAPPDATA%\<app name>\settings.json.</summary>
 internal sealed class AppSettings
@@ -11,7 +11,7 @@ internal sealed class AppSettings
     public const int MaxNotificationSeconds = 30;
 
     private static readonly string FilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppInfo.Name, "settings.json");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppInfo.FileName, "settings.json");
 
     public const int MinVisibleItems = 3;
     public const int MaxVisibleItems = 30;

@@ -8,7 +8,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>A small notification that fades in above the tray without taking focus.</summary>
 public partial class ToastWindow : Window

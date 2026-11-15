@@ -2,12 +2,12 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>Shows that the app is running. A left click toggles the popup, a right click opens its options.</summary>
 internal sealed class TrayIcon : IDisposable
 {
-    private const string IconResource = "WinDownload.ico";
+    private const string IconResource = "DownloadsInTray.ico";
 
     private readonly NotifyIcon _notifyIcon;
     private readonly Icon _icon;

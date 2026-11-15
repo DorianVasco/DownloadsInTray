@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>
 /// A standard Windows popup menu, like Explorer's. Windows only draws these menus dark for apps

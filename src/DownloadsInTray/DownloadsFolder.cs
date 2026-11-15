@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 internal static class DownloadsFolder
 {

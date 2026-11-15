@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 
-namespace WinDownload;
+namespace DownloadsInTray;
 
 /// <summary>
 /// A pinned taskbar icon can only launch an exe, so every click starts a process.
@@ -12,8 +12,8 @@ namespace WinDownload;
 /// </summary>
 internal static class Program
 {
-    private static readonly string MutexName = $@"Local\{AppInfo.Name}.Instance";
-    private static readonly string ShowEventName = $@"Local\{AppInfo.Name}.Show";
+    private static readonly string MutexName = $@"Local\{AppInfo.FileName}.Instance";
+    private static readonly string ShowEventName = $@"Local\{AppInfo.FileName}.Show";
     private const string BackgroundArgument = "--background";
 
     [STAThread]
@@ -41,6 +41,9 @@ internal static class Program
 
     private static void RunResident(EventWaitHandle showEvent, bool showImmediately)
     {
+        // Before anything reads the settings.
+        LegacyMigration.Run();
+
         var app = new Application
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown,
