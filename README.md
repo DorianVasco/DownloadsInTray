@@ -6,7 +6,7 @@ A Windows 11 alternative to the macOS Dock Downloads stack. Click the pinned tas
 
 ## Install
 
-Run `DownloadsInTray-<version>-setup.exe`. It installs for your account only, with no admin prompt, adds a Start menu entry, and offers to start the app with Windows. Windows doesn't let apps pin themselves, so then open Start, search for Downloads in Tray, right-click it and choose **Pin to taskbar**.
+Run `DownloadsInTray-<version>-setup.exe`. It needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0); if that's missing, setup offers the download page. It installs for your account only, with no admin prompt, adds a Start menu entry, and offers to start the app with Windows. Windows doesn't let apps pin themselves, so then open Start, search for Downloads in Tray, right-click it and choose **Pin to taskbar**.
 
 An earlier install under the old name WinDownload is replaced, and its settings carry over. Pin the new icon and unpin the old one, which no longer works.
 
@@ -51,7 +51,7 @@ This puts the release files in `dist\`:
 
 | File | Size | Needs |
 | --- | --- | --- |
-| `DownloadsInTray-<version>-setup.exe` | about 66 MB | nothing, installs the self-contained build |
+| `DownloadsInTray-<version>-setup.exe` | about 2 MB | the .NET 10 Desktop Runtime; setup checks for it and offers the download |
 | `DownloadsInTray-<version>-win-x64.exe` | about 0.3 MB | the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `DownloadsInTray-<version>-win-x64-self-contained.exe` | about 70 MB | nothing, the runtime is bundled |
 

@@ -2,7 +2,7 @@
 ;   AppName     the display name, <Product> in DownloadsInTray.csproj
 ;   AppFileName the file name, <AssemblyName> in DownloadsInTray.csproj
 ;   AppVersion  the <Version> from DownloadsInTray.csproj
-;   SourceExe   the self-contained exe, so the installed app needs no .NET runtime
+;   SourceExe   the standard exe, which needs the .NET 10 Desktop Runtime; setup checks for it
 ;   OutputDir   where the setup goes
 
 #ifndef AppName
@@ -62,13 +62,37 @@ Root: HKCU; Subkey: "{#RunKey}"; ValueType: string; ValueName: "{#AppFileName}";
     ValueData: """{app}\{#AppExe}"" --background"; Tasks: startatlogin; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "Start {#AppName} now"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\{#AppExe}"; Description: "Start {#AppName} now"; Flags: postinstall nowait skipifsilent; Check: HasDesktopRuntime
 
 [UninstallDelete]
 ; Settings written by the app.
 Type: filesandordirs; Name: "{localappdata}\{#AppFileName}"
 
 [Code]
+const
+  RuntimeDownload = 'https://dotnet.microsoft.com/download/dotnet/10.0';
+
+// The app is the small build without a bundled .NET runtime, so check for the one it needs.
+function HasDesktopRuntime(): Boolean;
+var
+  Found: TFindRec;
+begin
+  Result := FindFirst(ExpandConstant('{commonpf64}\dotnet\shared\Microsoft.WindowsDesktop.App\10.*'), Found);
+  if Result then FindClose(Found);
+end;
+
+function InitializeSetup(): Boolean;
+var
+  ErrorCode: Integer;
+begin
+  Result := True;
+  if HasDesktopRuntime() or WizardSilent() then Exit;
+  if MsgBox('{#AppName} needs the .NET 10 Desktop Runtime from Microsoft, which isn''t installed yet.' + #13#10#13#10 +
+            'Open the download page now? Setup continues either way; start {#AppName} once the runtime is installed.',
+            mbConfirmation, MB_YESNO) = IDYES then
+    ShellExec('open', RuntimeDownload, '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+end;
+
 // The app keeps running in the background, so stop it before files are replaced or removed.
 procedure StopRunningApp();
 var

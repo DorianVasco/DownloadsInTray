@@ -1,7 +1,7 @@
 # Builds the release files into dist\:
 #   <name>-<version>-win-x64.exe                small, needs the .NET 10 Desktop Runtime
 #   <name>-<version>-win-x64-self-contained.exe runs anywhere, with the runtime bundled
-#   <name>-<version>-setup.exe                  installer for the self-contained build (needs Inno Setup 6 to build)
+#   <name>-<version>-setup.exe                  installer for the small exe; checks for the .NET 10 Desktop Runtime (needs Inno Setup 6 to build)
 #   <name>-<version>-x64.msix                   package for the Microsoft Store (identity in installer\msix\store-identity.json)
 # <name> is <AssemblyName> in src\DownloadsInTray\DownloadsInTray.csproj, the version is <Version> there,
 # and the setup shows <Product> as the app's name.
@@ -39,7 +39,7 @@ $iscc = @(
 ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
 if ($iscc) {
-    & $iscc /Q "/DAppName=$displayName" "/DAppFileName=$name" "/DAppVersion=$version" "/DSourceExe=$(Join-Path $dist $builds[1].Name)" "/DOutputDir=$dist" (Join-Path $PSScriptRoot 'installer\Setup.iss')
+    & $iscc /Q "/DAppName=$displayName" "/DAppFileName=$name" "/DAppVersion=$version" "/DSourceExe=$(Join-Path $dist $builds[0].Name)" "/DOutputDir=$dist" (Join-Path $PSScriptRoot 'installer\Setup.iss')
     if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed to build the setup program' }
 }
 else {
