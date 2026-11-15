@@ -22,6 +22,12 @@ $ns.AddNamespace('s', 'http://www.w3.org/2000/svg')
 $viewBox = $doc.DocumentElement.GetAttribute('viewBox') -split '[\s,]+' | ForEach-Object { [double]::Parse($_, [cultureinfo]::InvariantCulture) }
 
 $gradient = $doc.SelectSingleNode('//s:linearGradient', $ns)
+if (-not $gradient) {
+    # A single-color drawing, such as the monochrome variants: use the first path's fill.
+    $fill = $doc.SelectSingleNode('//s:path', $ns).GetAttribute('fill')
+    $brush = New-Object System.Windows.Media.SolidColorBrush ([System.Windows.Media.ColorConverter]::ConvertFromString($fill))
+}
+else {
 $brush = New-Object System.Windows.Media.LinearGradientBrush
 $brush.MappingMode = 'Absolute'
 function Num($value) { if ($value) { [double]::Parse($value, [cultureinfo]::InvariantCulture) } else { 0.0 } }
@@ -40,6 +46,7 @@ foreach ($stop in $gradient.SelectNodes('s:stop', $ns)) {
     $rgb = [regex]::Match($value, 'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)')
     $color = if ($rgb.Success) { [System.Windows.Media.Color]::FromRgb([byte]$rgb.Groups[1].Value, [byte]$rgb.Groups[2].Value, [byte]$rgb.Groups[3].Value) } else { [System.Windows.Media.ColorConverter]::ConvertFromString($value.Trim()) }
     $brush.GradientStops.Add((New-Object System.Windows.Media.GradientStop $color, (Num $stop.offset)))
+}
 }
 $brush.Freeze()
 
