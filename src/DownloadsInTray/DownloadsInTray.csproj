@@ -14,7 +14,7 @@
     <Product>Downloads in Tray</Product>
     <AssemblyName>DownloadsInTray</AssemblyName>
     <RootNamespace>DownloadsInTray</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <!-- Application.ThemeMode (Fluent theme) is still flagged experimental. -->
     <!-- WFO0003: DPI awareness stays in app.manifest because WPF, not WinForms, owns the UI. -->
     <NoWarn>$(NoWarn);WPF0001;WFO0003</NoWarn>
