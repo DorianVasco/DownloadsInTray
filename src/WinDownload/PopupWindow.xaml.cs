@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -30,6 +31,7 @@ public partial class PopupWindow : Window
     private readonly ActiveDownloads _active = new();
     private readonly DispatcherTimer _activePoll;
     private SettingsWindow? _settings;
+    private ContextMenu? _trayMenu;
     private readonly DispatcherTimer _refreshDebounce;
     private readonly DispatcherTimer _mouseReleaseWatch;
     private FileSystemWatcher? _watcher;
@@ -111,8 +113,33 @@ public partial class PopupWindow : Window
     public void ShowOptionsMenu()
     {
         ClearClosingClick();
-        if (!IsVisible) ShowPopup();
-        Dispatcher.BeginInvoke(DispatcherPriority.Input, () => OnMenuClick(MenuButton, new RoutedEventArgs()));
+        _trayMenu ??= CreateTrayMenu();
+        _trayMenu.IsOpen = true;
+    }
+
+    private ContextMenu CreateTrayMenu()
+    {
+        var menu = new ContextMenu { Placement = PlacementMode.MousePoint };
+        menu.Items.Add(MenuEntry("Show downloads", (_, _) => ShowFromToast(), bold: true));
+        menu.Items.Add(MenuEntry("Open Downloads folder", OnOpenFolderClick));
+        menu.Items.Add(MenuEntry("Settings", OnSettingsClick));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(MenuEntry("Quit WinDownload", OnQuitClick));
+
+        // A menu only closes on an outside click or Esc while its window is in the foreground.
+        // The right-click on the tray icon allows this process to take it.
+        menu.Opened += (_, _) =>
+        {
+            if (PresentationSource.FromVisual(menu) is HwndSource source) Native.SetForegroundWindow(source.Handle);
+        };
+        return menu;
+    }
+
+    private static MenuItem MenuEntry(string header, RoutedEventHandler onClick, bool bold = false)
+    {
+        var item = new MenuItem { Header = header, FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal };
+        item.Click += onClick;
+        return item;
     }
 
     private void ShowFromToast()
