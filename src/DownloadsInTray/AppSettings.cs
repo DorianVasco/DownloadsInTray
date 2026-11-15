@@ -40,9 +40,6 @@ internal sealed class AppSettings
     /// <summary>Whether the one-time "icon is hidden" notification was shown.</summary>
     public bool HiddenTipShown { get; set; }
 
-    /// <summary>Whether the one-time "pin me" notification was shown.</summary>
-    public bool PinTipShown { get; set; }
-
     /// <summary>Raised after a setting changes and is saved.</summary>
     public static event Action? Changed;
 
