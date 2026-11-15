@@ -15,8 +15,8 @@ internal sealed class TrayIcon : IDisposable
 {
     private const string IconResource = "DownloadsInTray.ico";
     private const string ColorSvg = "icon.svg";
-    private const string WhiteSvg = "icon2-mono-dark.svg";
-    private const string BlackSvg = "icon2-mono-light.svg";
+    private const string WhiteSvg = "icon-mono-dark.svg";
+    private const string BlackSvg = "icon-mono-light.svg";
     private const int FrameCount = 8;
     private static readonly TimeSpan FrameTime = TimeSpan.FromMilliseconds(120);
 
@@ -27,6 +27,7 @@ internal sealed class TrayIcon : IDisposable
     private Icon[]? _frames;
     private string? _framesSource;
     private int _frame;
+    private Action? _notificationClick;
 
     public TrayIcon(PopupWindow popup)
     {
@@ -42,6 +43,7 @@ internal sealed class TrayIcon : IDisposable
         _animation = new DispatcherTimer(FrameTime, DispatcherPriority.Background, (_, _) => NextFrame(), Dispatcher.CurrentDispatcher);
         _animation.Stop();
         popup.DownloadingChanged += () => SetAnimating(popup.IsDownloading);
+        _notifyIcon.BalloonTipClicked += (_, _) => _notificationClick?.Invoke();
 
         Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
         AppSettings.Changed += () => dispatcher.BeginInvoke(RefreshIcon);
@@ -49,6 +51,16 @@ internal sealed class TrayIcon : IDisposable
         {
             if (e.Category == UserPreferenceCategory.General) dispatcher.BeginInvoke(RefreshIcon);
         };
+    }
+
+    /// <summary>
+    /// A standard Windows notification from the tray icon. Windows shows it like any app notification and
+    /// holds it back during Do not disturb. <paramref name="onClick"/> runs when the user clicks it.
+    /// </summary>
+    public void ShowNotification(string title, string text, Action? onClick)
+    {
+        _notificationClick = onClick;
+        _notifyIcon.ShowBalloonTip(10_000, title, text, ToolTipIcon.None);
     }
 
     /// <summary>The SVG the tray icon is drawn from right now.</summary>
