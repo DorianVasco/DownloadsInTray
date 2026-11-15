@@ -56,6 +56,7 @@ internal static class Program
 
         var tray = new TrayIcon(popup);
         app.Exit += (_, _) => tray.Dispose();
+        StartupTips.Schedule(tray);
 
         var listener = new Thread(() =>
         {
