@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace DownloadsInTray;
@@ -25,12 +27,13 @@ internal static class IconAnimation
     {
         XDocument doc;
         using (Stream stream = typeof(IconAnimation).Assembly.GetManifestResourceStream(SvgResource)!)
+        using (var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }))
         {
-            doc = XDocument.Load(stream);
+            doc = XDocument.Load(reader);
         }
 
         double[] viewBox = doc.Root!.Attribute("viewBox")!.Value
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(double.Parse).ToArray();
+            .Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(Parse).ToArray();
         Brush brush = GradientBrush(doc);
 
         var bar = new GeometryGroup();
@@ -72,24 +75,44 @@ internal static class IconAnimation
         return frames;
     }
 
+    // The icon's shapes share one gradient, so the first one is used for all of them. Handles the forms
+    // design tools export: plain x1/y1/x2/y2, or unit coordinates moved by a gradientTransform matrix,
+    // and stop colors as attributes or inside a style.
     private static Brush GradientBrush(XDocument doc)
     {
         XElement gradient = doc.Descendants(Svg + "linearGradient").First();
-        double Coordinate(string name) => double.Parse(gradient.Attribute(name)!.Value, System.Globalization.CultureInfo.InvariantCulture);
-        var brush = new LinearGradientBrush
+        Point start = new(Number(gradient, "x1"), Number(gradient, "y1"));
+        Point end = new(Number(gradient, "x2"), Number(gradient, "y2"));
+        if (gradient.Attribute("gradientTransform")?.Value is string transform)
         {
-            MappingMode = BrushMappingMode.Absolute,
-            StartPoint = new Point(Coordinate("x1"), Coordinate("y1")),
-            EndPoint = new Point(Coordinate("x2"), Coordinate("y2")),
-        };
+            double[] m = Regex.Matches(transform, @"-?[\d.]+(?:e-?\d+)?").Select(match => Parse(match.Value)).ToArray();
+            var matrix = new Matrix(m[0], m[1], m[2], m[3], m[4], m[5]);
+            start = matrix.Transform(start);
+            end = matrix.Transform(end);
+        }
+
+        var brush = new LinearGradientBrush { MappingMode = BrushMappingMode.Absolute, StartPoint = start, EndPoint = end };
         foreach (XElement stop in gradient.Elements(Svg + "stop"))
         {
-            var color = (Color)ColorConverter.ConvertFromString(stop.Attribute("stop-color")!.Value);
-            brush.GradientStops.Add(new GradientStop(color, double.Parse(stop.Attribute("offset")!.Value, System.Globalization.CultureInfo.InvariantCulture)));
+            brush.GradientStops.Add(new GradientStop(StopColor(stop), Number(stop, "offset")));
         }
         brush.Freeze();
         return brush;
     }
+
+    private static Color StopColor(XElement stop)
+    {
+        string value = stop.Attribute("stop-color")?.Value
+            ?? Regex.Match(stop.Attribute("style")?.Value ?? string.Empty, @"stop-color:\s*([^;]+)").Groups[1].Value;
+        Match rgb = Regex.Match(value, @"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)");
+        return rgb.Success
+            ? Color.FromRgb(byte.Parse(rgb.Groups[1].Value), byte.Parse(rgb.Groups[2].Value), byte.Parse(rgb.Groups[3].Value))
+            : (Color)ColorConverter.ConvertFromString(value.Trim());
+    }
+
+    private static double Number(XElement element, string attribute) => Parse(element.Attribute(attribute)?.Value ?? "0");
+
+    private static double Parse(string value) => double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 
     private static System.Drawing.Icon ToIcon(Visual visual, int pixels)
     {

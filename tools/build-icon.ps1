@@ -1,7 +1,7 @@
 # Renders src\DownloadsInTray\Assets\icon.svg into the app's .ico (16 to 256 px, PNG-compressed).
 # Run with Windows PowerShell (powershell.exe), which renders WPF on an STA thread:
 #   powershell -NoProfile -File tools\build-icon.ps1
-# Handles what icon.svg uses: filled paths and one linear gradient in user space.
+# Handles what icon.svg uses: filled paths sharing one linear gradient, as exported by Affinity and others.
 param(
     [string]$Svg = (Join-Path $PSScriptRoot '..\src\DownloadsInTray\Assets\icon.svg'),
     [string]$Ico = (Join-Path $PSScriptRoot '..\src\DownloadsInTray\Assets\DownloadsInTray.ico'),
@@ -10,19 +10,35 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase
 
-[xml]$doc = Get-Content -Raw $Svg
+$doc = New-Object System.Xml.XmlDocument
+$doc.XmlResolver = $null
+$settings = New-Object System.Xml.XmlReaderSettings
+$settings.DtdProcessing = [System.Xml.DtdProcessing]::Ignore
+$reader = [System.Xml.XmlReader]::Create((Resolve-Path $Svg).Path, $settings)
+$doc.Load($reader); $reader.Dispose()
 $ns = New-Object System.Xml.XmlNamespaceManager $doc.NameTable
 $ns.AddNamespace('s', 'http://www.w3.org/2000/svg')
-$viewBox = $doc.svg.viewBox -split '\s+' | ForEach-Object { [double]$_ }
+$viewBox = $doc.DocumentElement.GetAttribute('viewBox') -split '[\s,]+' | ForEach-Object { [double]::Parse($_, [cultureinfo]::InvariantCulture) }
 
 $gradient = $doc.SelectSingleNode('//s:linearGradient', $ns)
 $brush = New-Object System.Windows.Media.LinearGradientBrush
 $brush.MappingMode = 'Absolute'
-$brush.StartPoint = New-Object System.Windows.Point ([double]$gradient.x1), ([double]$gradient.y1)
-$brush.EndPoint = New-Object System.Windows.Point ([double]$gradient.x2), ([double]$gradient.y2)
+function Num($value) { if ($value) { [double]::Parse($value, [cultureinfo]::InvariantCulture) } else { 0.0 } }
+$start = New-Object System.Windows.Point (Num $gradient.x1), (Num $gradient.y1)
+$end = New-Object System.Windows.Point (Num $gradient.x2), (Num $gradient.y2)
+# Design tools often export unit coordinates moved by a gradientTransform matrix.
+if ($gradient.gradientTransform) {
+    $m = [regex]::Matches($gradient.gradientTransform, '-?[\d.]+(?:e-?\d+)?') | ForEach-Object { Num $_.Value }
+    $matrix = New-Object System.Windows.Media.Matrix $m[0], $m[1], $m[2], $m[3], $m[4], $m[5]
+    $start = $matrix.Transform($start); $end = $matrix.Transform($end)
+}
+$brush.StartPoint = $start
+$brush.EndPoint = $end
 foreach ($stop in $gradient.SelectNodes('s:stop', $ns)) {
-    $color = [System.Windows.Media.ColorConverter]::ConvertFromString($stop.'stop-color')
-    $brush.GradientStops.Add((New-Object System.Windows.Media.GradientStop $color, ([double]$stop.offset)))
+    $value = if ($stop.'stop-color') { $stop.'stop-color' } else { [regex]::Match($stop.style, 'stop-color:\s*([^;]+)').Groups[1].Value }
+    $rgb = [regex]::Match($value, 'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)')
+    $color = if ($rgb.Success) { [System.Windows.Media.Color]::FromRgb([byte]$rgb.Groups[1].Value, [byte]$rgb.Groups[2].Value, [byte]$rgb.Groups[3].Value) } else { [System.Windows.Media.ColorConverter]::ConvertFromString($value.Trim()) }
+    $brush.GradientStops.Add((New-Object System.Windows.Media.GradientStop $color, (Num $stop.offset)))
 }
 $brush.Freeze()
 
