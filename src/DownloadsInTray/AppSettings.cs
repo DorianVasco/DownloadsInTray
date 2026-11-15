@@ -37,6 +37,9 @@ internal sealed class AppSettings
     /// <summary>Shows the tray icon in plain white or black, matching the taskbar, like Windows' own tray icons.</summary>
     public bool MonochromeTrayIcon { get; set; }
 
+    /// <summary>Whether the popup has opened once already; the first time it opens next to the tray.</summary>
+    public bool FirstRunShown { get; set; }
+
     /// <summary>Whether the one-time "icon is hidden" notification was shown.</summary>
     public bool HiddenTipShown { get; set; }
 
@@ -61,7 +64,12 @@ internal sealed class AppSettings
     {
         try
         {
-            return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new AppSettings();
+            string json = File.ReadAllText(FilePath);
+            AppSettings settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+
+            // Settings saved before FirstRunShown existed belong to someone who has used the app already.
+            if (!json.Contains(nameof(FirstRunShown))) settings.FirstRunShown = true;
+            return settings;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
         {

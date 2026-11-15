@@ -191,6 +191,16 @@ public partial class PopupWindow : Window
     {
         _toast.Dismiss();
         Native.GetCursorPos(out _anchor);
+
+        // The very first time, open next to the tray icons, so a new user sees where the app lives.
+        // After that the popup opens wherever it was clicked from.
+        if (!AppSettings.Current.FirstRunShown)
+        {
+            _anchor = TrayCorner();
+            AppSettings.Current.FirstRunShown = true;
+            AppSettings.Current.Save();
+        }
+
         ShowItems(DownloadsFolder.ReadRecent());
         PollActive();
         Scroller.ScrollToTop();
@@ -348,6 +358,15 @@ public partial class PopupWindow : Window
             height -= Math.Max(0, Scroller.DesiredSize.Height - listCap);
         }
         return height;
+    }
+
+    /// <summary>The bottom-right corner of the primary screen's work area, where the tray icons sit.</summary>
+    private static Native.POINT TrayCorner()
+    {
+        var info = new Native.MONITORINFO { cbSize = System.Runtime.InteropServices.Marshal.SizeOf<Native.MONITORINFO>() };
+        IntPtr primary = Native.MonitorFromPoint(new Native.POINT(), Native.MONITOR_DEFAULTTOPRIMARY);
+        Native.GetMonitorInfo(primary, ref info);
+        return new Native.POINT { X = info.rcWork.Right - 1, Y = info.rcWork.Bottom - 1 };
     }
 
     private void PositionNearAnchor()
