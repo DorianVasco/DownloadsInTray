@@ -30,6 +30,9 @@ public partial class PopupWindow : Window
     private readonly NewDownloadTracker _newDownloads = new();
     private readonly ActiveDownloads _active = new();
     private readonly DispatcherTimer _activePoll;
+    private readonly DispatcherTimer _passiveHide;
+    private readonly HashSet<string> _watchedDownloads = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _highlighted = new(StringComparer.OrdinalIgnoreCase);
     private SettingsWindow? _settings;
     private ContextMenu? _trayMenu;
     private readonly DispatcherTimer _refreshDebounce;
@@ -56,11 +59,21 @@ public partial class PopupWindow : Window
         ActiveItems.ItemsSource = _active.Items;
         _activePoll = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) => PollActive(), Dispatcher);
         _activePoll.Stop();
+        _passiveHide = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher);
+        _passiveHide.Tick += (_, _) => OnPassiveHideTick();
+        Activated += (_, _) => _passiveHide.Stop();
         IsVisibleChanged += (_, _) =>
         {
             // Partial files are only polled while someone can see the progress.
             if (IsVisible) _activePoll.Start();
             else _activePoll.Stop();
+
+            if (!IsVisible)
+            {
+                _passiveHide.Stop();
+                _highlighted.Clear();
+                ApplyHighlights();
+            }
         };
         _mouseReleaseWatch = new DispatcherTimer(
             TimeSpan.FromMilliseconds(15),
@@ -220,9 +233,42 @@ public partial class PopupWindow : Window
             }
         }
 
-        // The open popup already shows new items as they arrive.
         IReadOnlyList<string> added = _newDownloads.TakeNew();
-        if (added.Count > 0 && !IsVisible) _toast.Announce(added, items);
+        List<string> watched = added.Where(_watchedDownloads.Remove).ToList();
+        if (watched.Count > 0) ShowFinished(watched);
+
+        // The open popup already shows new items as they arrive.
+        List<string> others = added.Except(watched).ToList();
+        if (others.Count > 0 && !IsVisible) _toast.Announce(others, items);
+    }
+
+    /// <summary>
+    /// Brings the popup back, without taking focus, for downloads the user watched in it.
+    /// It closes again after the notification time unless the user hovers or clicks it.
+    /// </summary>
+    private void ShowFinished(IReadOnlyList<string> paths)
+    {
+        _highlighted.UnionWith(paths);
+        ApplyHighlights();
+        if (IsVisible || !Native.CanInterrupt()) return;
+
+        _toast.Dismiss();
+        PollActive();
+        Scroller.ScrollToTop();
+        PositionNearAnchor();
+        ShowActivated = false;
+        Show();
+        ShowActivated = true;
+        PositionNearAnchor();
+
+        _passiveHide.Interval = TimeSpan.FromSeconds(AppSettings.Current.NotificationSeconds);
+        _passiveHide.Start();
+    }
+
+    private void OnPassiveHideTick()
+    {
+        if (IsActive || Native.IsCursorOver(_hwnd)) return;
+        HideSilently();
     }
 
     private void ShowItems(IReadOnlyList<DownloadItem> items)
@@ -230,12 +276,25 @@ public partial class PopupWindow : Window
         Items.ItemsSource = items;
         EmptyMessage.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         _icons.Load(items);
+        ApplyHighlights();
+    }
+
+    private void ApplyHighlights()
+    {
+        if (Items.ItemsSource is not IEnumerable<DownloadItem> items) return;
+        foreach (DownloadItem item in items) item.IsHighlighted = _highlighted.Contains(item.Path);
     }
 
     private void PollActive()
     {
         int before = _active.Items.Count;
         _active.Poll();
+
+        // Downloads seen running in the popup bring it back when they finish.
+        if (IsVisible)
+        {
+            foreach (ActiveDownload download in _active.Items) _watchedDownloads.Add(download.FinalPath);
+        }
         ActiveItems.Visibility = _active.Items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         if (IsVisible && _active.Items.Count != before) PositionNearAnchor();
     }

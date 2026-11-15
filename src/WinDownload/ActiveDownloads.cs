@@ -80,6 +80,10 @@ internal sealed class ActiveDownload : INotifyPropertyChanged
 
     public string Path { get; }
     public string Name { get; }
+
+    /// <summary>Where the browser renames the file once it's done.</summary>
+    public string FinalPath => System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path)!, Name);
+
     public bool IsPaused { get; private set; }
     public string Details { get; private set; } = string.Empty;
 

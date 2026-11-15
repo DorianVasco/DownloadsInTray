@@ -8,6 +8,7 @@ namespace WinDownload;
 public sealed class DownloadItem : INotifyPropertyChanged
 {
     private ImageSource? _icon;
+    private bool _isHighlighted;
 
     public DownloadItem(string path, string name, bool isFolder, long size, DateTime added, DateTime modified)
     {
@@ -39,6 +40,18 @@ public sealed class DownloadItem : INotifyPropertyChanged
         {
             _icon = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon)));
+        }
+    }
+
+    /// <summary>Marks a download that just finished while the user was watching it.</summary>
+    public bool IsHighlighted
+    {
+        get => _isHighlighted;
+        set
+        {
+            if (_isHighlighted == value) return;
+            _isHighlighted = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsHighlighted)));
         }
     }
 
