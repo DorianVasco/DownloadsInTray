@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Downloads in Tray icon, version 2: the original arrow-into-tray design, redrawn for Windows 11.
+  - Drawn on Microsoft's 48 x 48 icon grid. Straight edges sit on multiples of 3, so they land on whole
+    pixels at 16, 32 and 48 px (tray, title bar, Start), where the original's edges were blurred.
+  - Shaft, arrow arms and tray bar share one stroke weight; outer corners are rounded.
+  - Slightly deeper gradient: most of the icon now reaches 3:1 contrast on both light and dark taskbars.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="fill" x1="9" y1="3" x2="39" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1EA57D"/>
+      <stop offset="1" stop-color="#0A739B"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#fill)" d="M23,3 L25,3 Q27,3 27,5 L27,24 L33,18 L37.5,18 Q39,18 39,19.5 Q39,21 37.94,22.06 L25.06,34.94 Q24,36 22.94,34.94 L10.06,22.06 Q9,21 9,19.5 Q9,18 10.5,18 L15,18 L21,24 L21,5 Q21,3 23,3 Z"/>
+  <path fill="url(#fill)" d="M11,39 L37,39 Q39,39 39,41 L39,43 Q39,45 37,45 L11,45 Q9,45 9,43 L9,41 Q9,39 11,39 Z"/>
+</svg>

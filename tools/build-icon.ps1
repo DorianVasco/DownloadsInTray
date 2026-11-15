@@ -5,7 +5,8 @@
 param(
     [string]$Svg = (Join-Path $PSScriptRoot '..\src\DownloadsInTray\Assets\icon.svg'),
     [string]$Ico = (Join-Path $PSScriptRoot '..\src\DownloadsInTray\Assets\DownloadsInTray.ico'),
-    [int[]]$Sizes = @(16, 20, 24, 32, 40, 48, 64, 96, 128, 256)
+    # Every size Windows 11 asks for: title bar, tray, taskbar and Start at 100 to 400 % scaling.
+    [int[]]$Sizes = @(16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 80, 96, 128, 256)
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase

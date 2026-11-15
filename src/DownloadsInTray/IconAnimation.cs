@@ -20,8 +20,8 @@ internal static class IconAnimation
     private const string SvgResource = "icon.svg";
     private static readonly XNamespace Svg = "http://www.w3.org/2000/svg";
 
-    // Paths starting below this line (in the SVG's 1080-unit space) form the tray bar; the rest is the arrow.
-    private const double BarTop = 800;
+    // Paths starting below this share of the icon's height form the tray bar; the rest is the arrow.
+    private const double BarTopShare = 0.7;
 
     public static System.Drawing.Icon[] CreateFrames(int pixels, int count)
     {
@@ -41,7 +41,7 @@ internal static class IconAnimation
         foreach (XElement path in doc.Descendants(Svg + "path"))
         {
             Geometry geometry = Geometry.Parse(path.Attribute("d")!.Value);
-            (geometry.Bounds.Top >= BarTop ? bar : arrow).Children.Add(geometry);
+            (geometry.Bounds.Top >= viewBox[1] + viewBox[3] * BarTopShare ? bar : arrow).Children.Add(geometry);
         }
 
         // The arrow loops through the space above the bar, entering from the top as it leaves at the bottom.
