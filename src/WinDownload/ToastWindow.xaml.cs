@@ -46,6 +46,11 @@ public partial class ToastWindow : Window
     {
         _hwnd = new WindowInteropHelper(this).EnsureHandle();
         Native.ApplyFlyoutStyle(_hwnd, Native.WS_EX_NOACTIVATE | Native.WS_EX_LAYERED);
+        Native.ApplyBlurBehind(_hwnd);
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged += (_, e) =>
+        {
+            if (e.Category == Microsoft.Win32.UserPreferenceCategory.General) Dispatcher.BeginInvoke(() => Native.ApplyBlurBehind(_hwnd));
+        };
         NativeMenu.AllowDarkMenus(_hwnd);
         SetAlpha(0);
     }
