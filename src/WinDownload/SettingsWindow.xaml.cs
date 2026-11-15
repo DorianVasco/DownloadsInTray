@@ -14,7 +14,11 @@ public partial class SettingsWindow : Window
         NotificationTime.Minimum = AppSettings.MinNotificationSeconds;
         NotificationTime.Maximum = AppSettings.MaxNotificationSeconds;
         NotificationTime.Value = AppSettings.Current.NotificationSeconds;
+        VisibleItems.Minimum = AppSettings.MinVisibleItems;
+        VisibleItems.Maximum = AppSettings.MaxVisibleItems;
+        VisibleItems.Value = AppSettings.Current.VisibleItems;
         ShowNotificationTime();
+        ShowVisibleItems();
         _loaded = true;
     }
 
@@ -30,6 +34,16 @@ public partial class SettingsWindow : Window
         AppSettings.Current.Save();
         ShowNotificationTime();
     }
+
+    private void OnVisibleItemsChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!_loaded) return;
+        AppSettings.Current.VisibleItems = (int)VisibleItems.Value;
+        AppSettings.Current.Save();
+        ShowVisibleItems();
+    }
+
+    private void ShowVisibleItems() => VisibleItemsValue.Text = $"{(int)VisibleItems.Value} items";
 
     private void ShowNotificationTime() => NotificationTimeValue.Text = $"{(int)NotificationTime.Value} seconds";
 }

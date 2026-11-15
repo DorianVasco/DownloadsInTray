@@ -15,7 +15,6 @@ namespace WinDownload;
 
 public partial class PopupWindow : Window
 {
-    private const double MaxPopupHeight = 600;
     private const int ScreenGapDip = 12;
 
     // Clicking the pinned icon hides the popup through deactivation (mouse down), then launches
@@ -67,7 +66,11 @@ public partial class PopupWindow : Window
             (_, _) => OnMouseReleaseTick(),
             Dispatcher);
         _mouseReleaseWatch.Stop();
-        DpiChanged += (_, _) => PositionNearAnchor();
+        // WPF also raises this when the window is merely moved or resized, which must not reposition it again.
+        DpiChanged += (_, e) =>
+        {
+            if (e.OldDpi.PixelsPerDip != e.NewDpi.PixelsPerDip) PositionNearAnchor();
+        };
     }
 
     /// <summary>Creates the hidden window and starts watching Downloads so the first show is instant.</summary>
@@ -210,6 +213,19 @@ public partial class PopupWindow : Window
         if (IsVisible && _active.Items.Count != before) PositionNearAnchor();
     }
 
+    /// <summary>The full content height, with the list capped at the number of rows chosen in Settings; more rows scroll.</summary>
+    private double DesiredPopupHeight()
+    {
+        Root.Measure(new Size(Width, double.PositiveInfinity));
+        double height = Root.DesiredSize.Height;
+        if (Items.ItemContainerGenerator.ContainerFromIndex(0) is UIElement firstRow)
+        {
+            double listCap = firstRow.DesiredSize.Height * AppSettings.Current.VisibleItems;
+            height -= Math.Max(0, Scroller.DesiredSize.Height - listCap);
+        }
+        return height;
+    }
+
     private void PositionNearAnchor()
     {
         Native.POINT cursor = _anchor;
@@ -222,9 +238,8 @@ public partial class PopupWindow : Window
         Native.RECT work = info.rcWork;
         int gap = (int)(ScreenGapDip * scale);
 
-        Root.Measure(new Size(Width, double.PositiveInfinity));
         double availableDip = (work.Bottom - work.Top - 2 * gap) / scale;
-        double heightDip = Math.Min(Math.Min(Root.DesiredSize.Height, MaxPopupHeight), availableDip);
+        double heightDip = Math.Min(DesiredPopupHeight(), availableDip);
 
         int width = (int)Math.Ceiling(Width * scale);
         int height = (int)Math.Ceiling(heightDip * scale);

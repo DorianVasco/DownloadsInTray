@@ -13,7 +13,11 @@ internal sealed class AppSettings
     private static readonly string FilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinDownload", "settings.json");
 
+    public const int MinVisibleItems = 3;
+    public const int MaxVisibleItems = 30;
+
     private int _notificationSeconds = 5;
+    private int _visibleItems = 10;
 
     public static AppSettings Current { get; } = Load();
 
@@ -21,6 +25,13 @@ internal sealed class AppSettings
     {
         get => _notificationSeconds;
         set => _notificationSeconds = Math.Clamp(value, MinNotificationSeconds, MaxNotificationSeconds);
+    }
+
+    /// <summary>How many rows the popup shows before scrolling, which sets its height.</summary>
+    public int VisibleItems
+    {
+        get => _visibleItems;
+        set => _visibleItems = Math.Clamp(value, MinVisibleItems, MaxVisibleItems);
     }
 
     public void Save()
