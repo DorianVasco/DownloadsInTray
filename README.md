@@ -20,8 +20,10 @@ An earlier install under the old name WinDownload is replaced, and its settings 
 - **Running downloads** from Chrome, Edge and Firefox appear at the top with a moving bar, the size so far and the speed. A download that stops growing for 5 seconds shows as paused. If you watched a download here, the popup comes back without taking focus when it finishes, with the file marked, and closes again after the notification time unless you hover or click it. Browsers don't record the final size in their unfinished files, so there's no percentage.
 - **Drag a row** into a folder or app. Explorer moves it within a drive and copies it across drives.
 - **Notification:** a small notice fades in above the tray when something new lands in Downloads, and clicking it opens the file (or the list, when several arrived together). Right-click it for **Open**, **Show in folder** and **Show all downloads**. Drag it into a folder or app to move all the files it announces. It stays quiet while the popup is open and when Windows reports that you shouldn't be interrupted, such as during full-screen apps.
-- **Tray icon:** it shows the app is running. Left-click toggles the popup. Right-click opens a menu with Show downloads, Open Downloads folder, Settings and Quit. Windows may hide it under the tray's ^ arrow until you drag it out.
-- **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, how long notifications stay up (2 to 30 seconds), and how many items the popup shows before scrolling (3 to 30), which sets its height. **Quit Downloads in Tray** stops the background process.
+- **Tray icon:** it shows the app is running. Left-click toggles the popup. Right-click opens a menu with Show downloads, Open Downloads folder, Settings and Quit. Windows may hide it under the tray's ^ arrow until you drag it out; the app tells you once with a notification. While a download is running, the icon's arrow slides down into the tray:
+
+  ![The tray icon animating while a file downloads](docs/images/downloading.gif)
+- **⋯ menu:** **Settings** covers Start at login, which makes the first click after a reboot instant, how long notifications stay up (2 to 30 seconds), how many items the popup shows before scrolling (3 to 30), which sets its height, and a monochrome tray icon that's white on a dark taskbar and black on a light one. **Quit Downloads in Tray** stops the background process.
 
   ![The settings window with Start at login, notification time and visible items](docs/images/settings.png)
 
