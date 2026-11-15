@@ -66,12 +66,19 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Margin="16,14,16,8"
-                   FontSize="14"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                   Text="Downloads" />
+        <StackPanel Grid.Row="0" Margin="16,12,16,8" Orientation="Horizontal">
+            <Image x:Name="HeadingIcon"
+                   Width="20"
+                   Height="20"
+                   Margin="0,0,8,0"
+                   VerticalAlignment="Center"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+            <TextBlock VerticalAlignment="Center"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                       Text="Downloads" />
+        </StackPanel>
 
         <ItemsControl x:Name="ActiveItems"
                       Grid.Row="1"

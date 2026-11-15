@@ -48,6 +48,10 @@ public partial class PopupWindow : Window
     {
         InitializeComponent();
         Title = AppInfo.Name;
+
+        // Large enough to stay sharp at 200 % scaling.
+        HeadingIcon.Source = DownloadsIcon.Image(48);
+        if (HeadingIcon.Source == null) HeadingIcon.Visibility = Visibility.Collapsed;
         _icons = new ShellIconLoader(Dispatcher);
         _refreshDebounce = new DispatcherTimer(
             TimeSpan.FromMilliseconds(300),

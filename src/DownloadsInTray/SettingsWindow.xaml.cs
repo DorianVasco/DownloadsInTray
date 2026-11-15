@@ -11,6 +11,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         Title = $"{AppInfo.Name} Settings";
+        if (DownloadsIcon.Image(32) is { } icon) Icon = icon;
         StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
         NotificationTime.Minimum = AppSettings.MinNotificationSeconds;
         NotificationTime.Maximum = AppSettings.MaxNotificationSeconds;

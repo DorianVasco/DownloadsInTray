@@ -14,14 +14,19 @@ internal sealed class TrayIcon : IDisposable
 
     public TrayIcon(PopupWindow popup)
     {
-        using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream(IconResource)!;
-        _icon = new Icon(stream, SystemInformation.SmallIconSize);
+        _icon = DownloadsIcon.TrayIcon(SystemInformation.SmallIconSize.Width) ?? LoadOwnIcon();
         _notifyIcon = new NotifyIcon { Icon = _icon, Text = AppInfo.Name, Visible = true };
         _notifyIcon.MouseUp += (_, e) =>
         {
             if (e.Button == MouseButtons.Left) popup.HandleLaunchRequest();
             else if (e.Button == MouseButtons.Right) popup.ShowOptionsMenu();
         };
+    }
+
+    private static Icon LoadOwnIcon()
+    {
+        using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream(IconResource)!;
+        return new Icon(stream, SystemInformation.SmallIconSize);
     }
 
     public void Dispose()

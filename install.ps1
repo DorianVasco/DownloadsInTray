@@ -17,6 +17,7 @@ $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = Join-Path $target 'DownloadsInTray.exe'
 $shortcut.WorkingDirectory = $target
 $shortcut.Description = 'Recent downloads popup'
+$shortcut.IconLocation = "$env:SystemRoot\System32\imageres.dll,-184"
 $shortcut.Save()
 
 Write-Host "Installed to $target"

@@ -54,7 +54,10 @@ Type: filesandordirs; Name: "{localappdata}\Programs\{#OldName}"
 Type: files; Name: "{userprograms}\{#OldName}.lnk"
 
 [Icons]
-Name: "{userprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; Comment: "Recent downloads popup"
+; Uses Windows' own Downloads folder icon, so a taskbar pin made from it shows that icon without the app
+; shipping Microsoft's artwork. The exe and setup keep the app's own icon.
+Name: "{userprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; Comment: "Recent downloads popup"; \
+    IconFilename: "{sys}\imageres.dll"; IconIndex: -184
 
 [Registry]
 ; The same value the app's own "Start at login" setting writes, so either can turn it off.
