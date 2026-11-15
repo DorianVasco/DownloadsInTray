@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -34,7 +33,6 @@ public partial class PopupWindow : Window
     private readonly HashSet<string> _watchedDownloads = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _highlighted = new(StringComparer.OrdinalIgnoreCase);
     private SettingsWindow? _settings;
-    private ContextMenu? _trayMenu;
     private readonly DispatcherTimer _refreshDebounce;
     private readonly DispatcherTimer _mouseReleaseWatch;
     private FileSystemWatcher? _watcher;
@@ -94,6 +92,13 @@ public partial class PopupWindow : Window
         _hwnd = new WindowInteropHelper(this).EnsureHandle();
 
         Native.ApplyFlyoutStyle(_hwnd);
+        Native.ApplyBlurBehind(_hwnd);
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged += (_, e) =>
+        {
+            // The blur's tint follows a switch between light and dark mode.
+            if (e.Category == Microsoft.Win32.UserPreferenceCategory.General) Dispatcher.BeginInvoke(() => Native.ApplyBlurBehind(_hwnd));
+        };
+        NativeMenu.AllowDarkMenus(_hwnd);
         _toast.Prepare();
         _toast.ShowListRequested += ShowFromToast;
 
@@ -122,37 +127,17 @@ public partial class PopupWindow : Window
         ShowPopup();
     }
 
-    /// <summary>Opens the popup with its options menu, for a right-click on the tray icon.</summary>
+    /// <summary>The tray icon's right-click menu.</summary>
     public void ShowOptionsMenu()
     {
         ClearClosingClick();
-        _trayMenu ??= CreateTrayMenu();
-        _trayMenu.IsOpen = true;
-    }
-
-    private ContextMenu CreateTrayMenu()
-    {
-        var menu = new ContextMenu { Placement = PlacementMode.MousePoint };
-        menu.Items.Add(MenuEntry("Show downloads", (_, _) => ShowFromToast(), bold: true));
-        menu.Items.Add(MenuEntry("Open Downloads folder", OnOpenFolderClick));
-        menu.Items.Add(MenuEntry("Settings", OnSettingsClick));
-        menu.Items.Add(new Separator());
-        menu.Items.Add(MenuEntry("Quit WinDownload", OnQuitClick));
-
-        // A menu only closes on an outside click or Esc while its window is in the foreground.
-        // The right-click on the tray icon allows this process to take it.
-        menu.Opened += (_, _) =>
-        {
-            if (PresentationSource.FromVisual(menu) is HwndSource source) Native.SetForegroundWindow(source.Handle);
-        };
-        return menu;
-    }
-
-    private static MenuItem MenuEntry(string header, RoutedEventHandler onClick, bool bold = false)
-    {
-        var item = new MenuItem { Header = header, FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal };
-        item.Click += onClick;
-        return item;
+        new NativeMenu()
+            .Add("Show downloads", ShowFromToast, isDefault: true)
+            .Add("Open Downloads folder", OpenDownloadsFolder)
+            .Add("Settings", OpenSettings)
+            .AddSeparator()
+            .Add("Quit WinDownload", Quit)
+            .ShowAtCursor(_hwnd);
     }
 
     private void ShowFromToast()
@@ -429,15 +414,39 @@ public partial class PopupWindow : Window
             HideSilently();
             e.Handled = true;
         }
+        else if ((e.Key == Key.Apps || (e.Key == Key.F10 && Keyboard.Modifiers == ModifierKeys.Shift)) &&
+                 Keyboard.FocusedElement is Button { DataContext: DownloadItem item } row)
+        {
+            Point corner = row.PointToScreen(new Point(row.ActualWidth / 2, row.ActualHeight / 2));
+            ItemMenu(item).Show(_hwnd, (int)corner.X, (int)corner.Y);
+            e.Handled = true;
+        }
     }
+
+    private void OnRowRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: DownloadItem item }) return;
+        ItemMenu(item).ShowAtCursor(_hwnd);
+        e.Handled = true;
+    }
+
+    private NativeMenu ItemMenu(DownloadItem item) => new NativeMenu()
+        .Add("Open", () => OpenItem(item), isDefault: true)
+        .Add("Show in folder", () =>
+        {
+            HideSilently();
+            ShellActions.ShowInFolder(item.Path);
+        });
 
     private void OnItemClick(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: DownloadItem item })
-        {
-            HideSilently();
-            ShellActions.Open(item.Path);
-        }
+        if (sender is FrameworkElement { DataContext: DownloadItem item }) OpenItem(item);
+    }
+
+    private void OpenItem(DownloadItem item)
+    {
+        HideSilently();
+        ShellActions.Open(item.Path);
     }
 
     private void OnRowMouseDown(object sender, MouseButtonEventArgs e)
@@ -470,16 +479,9 @@ public partial class PopupWindow : Window
         if (IsVisible && result != DragDropEffects.None) HideSilently();
     }
 
-    private void OnShowInFolderClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: DownloadItem item })
-        {
-            HideSilently();
-            ShellActions.ShowInFolder(item.Path);
-        }
-    }
+    private void OnOpenFolderClick(object sender, RoutedEventArgs e) => OpenDownloadsFolder();
 
-    private void OnOpenFolderClick(object sender, RoutedEventArgs e)
+    private void OpenDownloadsFolder()
     {
         HideSilently();
         ShellActions.Open(DownloadsFolder.Path);
@@ -487,12 +489,15 @@ public partial class PopupWindow : Window
 
     private void OnMenuClick(object sender, RoutedEventArgs e)
     {
-        ContextMenu menu = MenuButton.ContextMenu;
-        menu.PlacementTarget = MenuButton;
-        menu.IsOpen = true;
+        Point below = MenuButton.PointToScreen(new Point(0, MenuButton.ActualHeight));
+        new NativeMenu()
+            .Add("Settings", OpenSettings)
+            .AddSeparator()
+            .Add("Quit WinDownload", Quit)
+            .Show(_hwnd, (int)below.X, (int)below.Y);
     }
 
-    private void OnSettingsClick(object sender, RoutedEventArgs e)
+    private void OpenSettings()
     {
         HideSilently();
         if (_settings == null)
@@ -512,7 +517,7 @@ public partial class PopupWindow : Window
         HideSilently();
     }
 
-    private void OnQuitClick(object sender, RoutedEventArgs e)
+    private void Quit()
     {
         _quitting = true;
         Application.Current.Shutdown();

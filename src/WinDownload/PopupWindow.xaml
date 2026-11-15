@@ -135,14 +135,9 @@
                                 Click="OnItemClick"
                                 PreviewMouseLeftButtonDown="OnRowMouseDown"
                                 PreviewMouseMove="OnRowMouseMove"
+                                MouseRightButtonUp="OnRowRightClick"
                                 ToolTip="{Binding Name}"
                                 ToolTipService.ShowsToolTipOnKeyboardFocus="False">
-                            <Button.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Open" FontWeight="SemiBold" Click="OnItemClick" />
-                                    <MenuItem Header="Show in folder" Click="OnShowInFolderClick" />
-                                </ContextMenu>
-                            </Button.ContextMenu>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="36" />
@@ -192,13 +187,6 @@
                     Click="OnMenuClick"
                     AutomationProperties.Name="More options">
                 <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE712;" />
-                <Button.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Settings" Click="OnSettingsClick" />
-                        <Separator />
-                        <MenuItem Header="Quit WinDownload" Click="OnQuitClick" />
-                    </ContextMenu>
-                </Button.ContextMenu>
             </Button>
         </Grid>
     </Grid>

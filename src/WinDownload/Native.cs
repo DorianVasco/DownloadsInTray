@@ -165,6 +165,66 @@ internal static class Native
 
     public static readonly Guid FOLDERID_Downloads = new("374DE290-123F-4565-9164-39C4925E467B");
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ACCENT_POLICY
+    {
+        public int AccentState;
+        public int AccentFlags;
+        public uint GradientColor;
+        public int AnimationId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WINDOWCOMPOSITIONATTRIBDATA
+    {
+        public int Attribute;
+        public IntPtr Data;
+        public int SizeOfData;
+    }
+
+    private const int WCA_ACCENT_POLICY = 19;
+    private const int ACCENT_ENABLE_ACRYLICBLURBEHIND = 4;
+    private const int DWMSBT_NONE = 1;
+
+    [DllImport("user32.dll")]
+    private static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WINDOWCOMPOSITIONATTRIBDATA data);
+
+    public static bool AppsUseLightTheme()
+    {
+        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+        return key?.GetValue("AppsUseLightTheme") is not int value || value != 0;
+    }
+
+    /// <summary>
+    /// A see-through, blurred background in the theme's color, like the Windows 11 flyouts. The system
+    /// acrylic backdrop is tinted so heavily that little shows through, so this uses the blur accent
+    /// that taskbar tools use instead, which takes a custom tint.
+    /// </summary>
+    public static void ApplyBlurBehind(IntPtr hwnd)
+    {
+        int none = DWMSBT_NONE;
+        DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref none, sizeof(int));
+
+        // Tint as 0xAABBGGRR: Windows 11's flyout colors at about 63 % opacity.
+        var accent = new ACCENT_POLICY
+        {
+            AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND,
+            GradientColor = AppsUseLightTheme() ? 0xA0F3F3F3 : 0xA0202020,
+        };
+        int size = Marshal.SizeOf<ACCENT_POLICY>();
+        IntPtr pointer = Marshal.AllocHGlobal(size);
+        try
+        {
+            Marshal.StructureToPtr(accent, pointer, false);
+            var data = new WINDOWCOMPOSITIONATTRIBDATA { Attribute = WCA_ACCENT_POLICY, Data = pointer, SizeOfData = size };
+            SetWindowCompositionAttribute(hwnd, ref data);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(pointer);
+        }
+    }
+
     /// <summary>Asks the system rather than WPF, whose mouse-over state goes stale while a menu or drag holds the mouse.</summary>
     public static bool IsCursorOver(IntPtr hwnd)
     {

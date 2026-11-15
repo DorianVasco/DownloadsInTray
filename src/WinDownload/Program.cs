@@ -47,6 +47,7 @@ internal static class Program
             ThemeMode = ThemeMode.System,
         };
 
+        NativeMenu.FollowSystemTheme();
         var popup = new PopupWindow();
         popup.Prepare();
 

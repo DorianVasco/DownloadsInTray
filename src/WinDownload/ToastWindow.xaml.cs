@@ -28,6 +28,7 @@ public partial class ToastWindow : Window
     private long _animationStart;
     private string[] _paths = Array.Empty<string>();
     private Point? _pressedAt;
+    private bool _menuOpen;
     private string _latestPath = string.Empty;
 
     public ToastWindow()
@@ -45,6 +46,7 @@ public partial class ToastWindow : Window
     {
         _hwnd = new WindowInteropHelper(this).EnsureHandle();
         Native.ApplyFlyoutStyle(_hwnd, Native.WS_EX_NOACTIVATE | Native.WS_EX_LAYERED);
+        NativeMenu.AllowDarkMenus(_hwnd);
         SetAlpha(0);
     }
 
@@ -63,7 +65,6 @@ public partial class ToastWindow : Window
         DataContext = latest;
         _paths = addedPaths.ToArray();
         _latestPath = latest?.Path ?? addedPaths[0];
-        OpenItem.Header = single ? "Open" : $"Open {latestName}";
 
         bool alreadyShown = IsVisible && !_fadingOut;
         if (!alreadyShown) ShowAnimated();
@@ -148,7 +149,7 @@ public partial class ToastWindow : Window
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
-        if (_pressedAt == null && !ContextMenu.IsOpen) _dismissTimer.Start();
+        if (_pressedAt == null && !_menuOpen) _dismissTimer.Start();
     }
 
     private void KeepVisible()
@@ -193,40 +194,40 @@ public partial class ToastWindow : Window
         _pressedAt = null;
 
         // A single download opens like a list row; several can't share one click, so show them all.
-        if (_paths.Length == 1) OnOpenClick(sender, e);
-        else OnShowListClick(sender, e);
+        if (_paths.Length == 1) OpenLatest();
+        else ShowList();
     }
 
-    private void OnOpenClick(object sender, RoutedEventArgs e)
+    // The notification stays up while its menu is open.
+    private void OnMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        KeepVisible();
+        _menuOpen = true;
+        string latestName = Path.GetFileName(_latestPath);
+        new NativeMenu()
+            .Add(_paths.Length == 1 ? "Open" : $"Open {latestName}", OpenLatest, isDefault: true)
+            .Add("Show in folder", () =>
+            {
+                Dismiss();
+                ShellActions.ShowInFolder(_latestPath);
+            })
+            .AddSeparator()
+            .Add("Show all downloads", ShowList)
+            .ShowAtCursor(_hwnd);
+        _menuOpen = false;
+        if (IsVisible) RestartDismissTimer();
+        e.Handled = true;
+    }
+
+    private void OpenLatest()
     {
         Dismiss();
         ShellActions.Open(_latestPath);
     }
 
-    private void OnShowInFolderClick(object sender, RoutedEventArgs e)
-    {
-        Dismiss();
-        ShellActions.ShowInFolder(_latestPath);
-    }
-
-    private void OnShowListClick(object sender, RoutedEventArgs e)
+    private void ShowList()
     {
         Dismiss();
         ShowListRequested?.Invoke();
-    }
-
-    // The notification stays up while its menu is open.
-    private void OnMenuOpened(object sender, RoutedEventArgs e)
-    {
-        KeepVisible();
-
-        // The notification never takes focus by itself, but a menu only closes on an outside click or Esc
-        // when its window is in the foreground. The right-click just given allows this.
-        Native.SetForegroundWindow(_hwnd);
-    }
-
-    private void OnMenuClosed(object sender, RoutedEventArgs e)
-    {
-        if (IsVisible) RestartDismissTimer();
     }
 }
