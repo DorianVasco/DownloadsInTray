@@ -9,9 +9,8 @@ using System.Windows.Media.Imaging;
 namespace DownloadsInTray;
 
 /// <summary>
-/// The Windows Downloads folder icon, loaded from Windows itself at runtime rather than shipped with
-/// the app, since the icon belongs to Microsoft. The exe and setup keep the app's own icon for that reason;
-/// the Start menu shortcut points at this one (see installer\Setup.iss).
+/// The Windows Downloads folder icon, shown in front of the popup's "Downloads" heading. It is loaded
+/// from Windows itself at runtime rather than shipped with the app, since the icon belongs to Microsoft.
 /// </summary>
 internal static class DownloadsIcon
 {
@@ -28,8 +27,10 @@ internal static class DownloadsIcon
     /// <summary>A WPF image of the icon at the given pixel size, or null if Windows doesn't provide it.</summary>
     public static ImageSource? Image(int pixels)
     {
-        IntPtr icon = Load(pixels);
-        if (icon == IntPtr.Zero) return null;
+        // A negative index asks for a resource ID rather than a position.
+        int result = SHDefExtractIcon(Library, -ResourceId, 0, out IntPtr icon, out IntPtr small, (uint)pixels);
+        if (small != IntPtr.Zero) DestroyIcon(small);
+        if (result != 0 || icon == IntPtr.Zero) return null;
         try
         {
             BitmapSource image = Imaging.CreateBitmapSourceFromHIcon(icon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
@@ -40,29 +41,5 @@ internal static class DownloadsIcon
         {
             DestroyIcon(icon);
         }
-    }
-
-    /// <summary>A Windows Forms icon for the tray at the given pixel size, or null if Windows doesn't provide it.</summary>
-    public static System.Drawing.Icon? TrayIcon(int pixels)
-    {
-        IntPtr icon = Load(pixels);
-        if (icon == IntPtr.Zero) return null;
-        try
-        {
-            using var borrowed = System.Drawing.Icon.FromHandle(icon);
-            return (System.Drawing.Icon)borrowed.Clone();
-        }
-        finally
-        {
-            DestroyIcon(icon);
-        }
-    }
-
-    // A negative index asks for a resource ID rather than a position.
-    private static IntPtr Load(int pixels)
-    {
-        int result = SHDefExtractIcon(Library, -ResourceId, 0, out IntPtr large, out IntPtr small, (uint)pixels);
-        if (small != IntPtr.Zero) DestroyIcon(small);
-        return result == 0 ? large : IntPtr.Zero;
     }
 }

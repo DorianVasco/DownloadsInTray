@@ -29,7 +29,7 @@ An earlier install under the old name WinDownload is replaced, and its settings 
 
 A pinned icon can only launch an exe. The first launch stays running with a hidden popup, and each later launch signals it and exits. While none of its windows are showing, it lets Windows throttle it to save power (EcoQoS), and it runs at full speed again as soon as something opens.
 
-The tray icon, the popup heading, the settings window and the Start menu shortcut use Windows' own Downloads folder icon, loaded from `imageres.dll` at runtime instead of shipped with the app. The exe and setup files keep the app's own icon.
+The app icon is drawn in `src\DownloadsInTray\Assets\icon.svg`. After changing it, regenerate the .ico with `powershell -File tools\build-icon.ps1`. The "Downloads" heading in the popup uses Windows' own Downloads folder icon, loaded from `imageres.dll` at runtime instead of shipped with the app.
 
 The list shows files and folders from the Downloads known folder, sorted by creation time and capped at 50. Hidden and system items and unfinished downloads (`.crdownload`, `.part`, `.partial`, `.download`, `.tmp`) are left out.
 

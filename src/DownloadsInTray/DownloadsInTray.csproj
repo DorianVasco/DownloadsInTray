@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\DownloadsInTray.ico" LogicalName="DownloadsInTray.ico" />
+    <EmbeddedResource Include="Assets\icon.svg" LogicalName="icon.svg" />
   </ItemGroup>
 
 </Project>

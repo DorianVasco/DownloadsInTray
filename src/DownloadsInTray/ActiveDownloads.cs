@@ -105,7 +105,10 @@ internal sealed class ActiveDownload : INotifyPropertyChanged
             // Smoothed, so the speed doesn't jump with every chunk the browser writes.
             _bytesPerSecond = _bytesPerSecond == 0 ? sample : _bytesPerSecond * 0.6 + sample * 0.4;
         }
-        if (bytes != _bytes) _lastGrowth = now;
+        // The first sample can't tell growth from a paused file, so it only counts as running until the
+        // next poll (about a second later) confirms it.
+        if (_bytes < 0) _lastGrowth = now - PausedAfterMs + 1500;
+        else if (bytes != _bytes) _lastGrowth = now;
 
         _bytes = bytes;
         _lastSample = now;
